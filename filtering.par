@@ -1,0 +1,189 @@
+### ____________________________________________________________________ ###
+###                                                                      ###
+### SoFiA 2.1.1 (default_parameters.par) - Source Finding Application    ###
+### Copyright (C) 2020 Tobias Westmeier                                  ###
+### ____________________________________________________________________ ###
+###                                                                      ###
+### Address:  Tobias Westmeier                                           ###
+###           ICRAR M468                                                 ###
+###           The University of Western Australia                        ###
+###           35 Stirling Highway                                        ###
+###           Crawley WA 6009                                            ###
+###           Australia                                                  ###
+###                                                                      ###
+### E-mail:   tobias.westmeier [at] uwa.edu.au                           ###
+### ____________________________________________________________________ ###
+###                                                                      ###
+### This program is free software: you can redistribute it and/or modify ###
+### it under the terms of the GNU General Public License as published by ###
+### the Free Software Foundation, either version 3 of the License, or    ###
+### (at your option) any later version.                                  ###
+###                                                                      ###
+### This program is distributed in the hope that it will be useful,      ###
+### but WITHOUT ANY WARRANTY; without even the implied warranty of       ###
+### MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the         ###
+### GNU General Public License for more details.                         ###
+###                                                                      ###
+### You should have received a copy of the GNU General Public License    ###
+### along with this program. If not, see http://www.gnu.org/licenses/.   ###
+### ____________________________________________________________________ ###
+###                                                                      ###
+
+
+# Default parameters for generating a continuum filtered cube in SoFiA-2
+# Please do not modify!
+
+
+# Global settings
+
+pipeline.verbose           =  false
+pipeline.pedantic          =  true
+pipeline.threads           =  22
+
+
+# Input
+
+input.data                 =  /PATH/TASKID/BEAM/HI_image_cubeN.fits
+input.region               =  
+input.gain                 =  
+input.noise                =  
+input.weights              =  
+input.mask                 =  
+input.invert               =  false
+
+
+# Flagging
+
+flag.region                =
+flag.catalog               =
+flag.radius                =  0
+flag.auto                  =  pixels
+flag.threshold             =  5
+flag.log                   =  true
+
+
+# Continuum subtraction
+
+contsub.enable             =  false
+contsub.order              =  0
+contsub.threshold          =  2.0
+contsub.shift              =  4
+contsub.padding            =  3
+
+
+# Noise scaling
+
+scaleNoise.enable          =  true
+scaleNoise.mode            =  spectral
+scaleNoise.statistic       =  mad
+scaleNoise.fluxRange       =  negative
+scaleNoise.windowXY        =  25
+scaleNoise.windowZ         =  15
+scaleNoise.gridXY          =  0
+scaleNoise.gridZ           =  0
+scaleNoise.interpolate     =  false
+scaleNoise.scfind          =  true
+
+
+# Ripple filter
+
+rippleFilter.enable        =  false
+rippleFilter.statistic     =  median
+rippleFilter.windowXY      =  31
+rippleFilter.windowZ       =  15
+rippleFilter.gridXY        =  0
+rippleFilter.gridZ         =  0
+rippleFilter.interpolate   =  false
+
+
+# S+C finder
+
+scfind.enable              =  false
+scfind.kernelsXY           =  0, 3, 6
+scfind.kernelsZ            =  0, 3, 7
+scfind.threshold           =  4.0
+scfind.replacement         =  2.0
+scfind.statistic           =  mad
+scfind.fluxRange           =  negative
+
+
+# Threshold finder
+
+threshold.enable           =  false
+threshold.threshold        =  5.0
+threshold.mode             =  relative
+threshold.statistic        =  mad
+threshold.fluxRange        =  negative
+
+
+# Linker
+
+linker.enable              =  false
+linker.radiusXY            =  1
+linker.radiusZ             =  2
+linker.minSizeXY           =  5
+linker.minSizeZ            =  5
+linker.maxSizeXY           =  0
+linker.maxSizeZ            =  0
+linker.minPixels           =  0
+linker.maxPixels           =  0
+linker.minFill             =  0.0
+linker.maxFill             =  0.0
+linker.positivity          =  false
+linker.keepNegative        =  false
+
+
+# Reliability
+
+reliability.enable         =  false
+reliability.parameters     =  peak, sum, mean
+reliability.threshold      =  0.9
+reliability.scaleKernel    =  0
+reliability.minSNR         =  3.0
+reliability.minPixels      =  0
+reliability.autoKernel     =  true
+reliability.iterations     =  30
+reliability.tolerance      =  0.05
+reliability.catalog        =
+reliability.plot           =  true
+reliability.debug          =  false
+
+
+# Mask dilation
+
+dilation.enable            =  false
+dilation.iterationsXY      =  10
+dilation.iterationsZ       =  5
+dilation.threshold         =  0.001
+
+
+# Parameterisation
+
+parameter.enable           =  false
+parameter.wcs              =  true
+parameter.physical         =  false
+parameter.prefix           =  SoFiA
+parameter.offset           =  false
+
+
+# Output
+
+output.directory           =  
+output.filename            =  
+output.writeCatASCII       =  false
+output.writeCatXML         =  false
+output.writeCatSQL         =  false
+output.writeNoise          =  false
+output.writeFiltered       =  true
+output.writeMask           =  false
+output.writeMask2d         =  false
+output.writeRawMask        =  false
+output.writeMoments        =  false
+output.writeCubelets       =  false
+output.marginCubelets      =  10
+output.thresholdMom12      =  0.0
+output.overwrite           =  true
+
+
+# Updated parameters
+
