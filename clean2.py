@@ -20,17 +20,14 @@ import apercal
 from modules.functions import fix_beam_header, write_catalog
 
 
-def worker(inQueue, outQueue):  
-
+def worker(inQueue, outQueue):
     """
     Defines the worker process of the parallelisation with multiprocessing.Queue
     and multiprocessing.Process.
     """
     for i in iter(inQueue.get, 'STOP'):
-
         status = run(i)
-
-        outQueue.put(( status ))
+        outQueue.put(status)
 
 
 def run(i):
@@ -61,16 +58,13 @@ def run(i):
 
 
 def worker2(inQueue, outQueue):
-
     """
     Defines the worker process of the parallelisation with multiprocessing.Queue
     and multiprocessing.Process.
     """
     for i in iter(inQueue.get, 'STOP'):
-
         status = run2(i)
-
-        outQueue.put(( status ))
+        outQueue.put(status)
 
 
 def run2(i):
@@ -149,14 +143,15 @@ def run2(i):
 
 ###################################################################
 
-parser = ArgumentParser(description="Do source finding in the HI spectral line cubes for a given taskid, beam, cubes",
-                        formatter_class=RawTextHelpFormatter)
+parser = ArgumentParser(description="Do source finding in the HI spectral line cubes for a given taskid,"
+                                    " beam, cubes", formatter_class=RawTextHelpFormatter)
 
 parser.add_argument('-t', '--taskid', default='190915041',
                     help='Specify the input taskid (default: %(default)s).')
 
 parser.add_argument('-b', '--beams', default='0-39',
-                    help='Specify a range (0-39) or list (3,5,7,11) of beams on which to do source finding (default: %(default)s).')
+                    help='Specify a range (0-39) or list (3,5,7,11) of beams on which to do source finding'
+                         ' (default: %(default)s).')
 
 parser.add_argument('-c', '--cubes', default='1,2,3',
                     help='Specify the cubes on which to do source finding (default: %(default)s).')
@@ -169,7 +164,7 @@ parser.add_argument('-n', "--nospline",
                     action='store_true')
 
 parser.add_argument('-o', "--overwrite",
-                    help="If option is included, overwrite old clean, model, and residual FITS files and 'repaired' spline file.",
+                    help="If option is included, overwrite old clean, model, and residual FITS files.",
                     action='store_true')
 
 parser.add_argument('-j', "--njobs",
@@ -336,7 +331,8 @@ for b in beams:
                 print("[CLEAN2] Determining the statistics from the filtered Beam {:02}, Cube {}.".format(b, c))
             elif os.path.isfile(splinefits):
                 f = pyfits.open(splinefits)
-                print("[CLEAN2] Determining the statistics from the filtered & spline fitted Beam {:02}, Cube {}.".format(b, c))
+                print("[CLEAN2] Determining the statistics from the filtered & spline fitted Beam {:02},"
+                      " Cube {}.".format(b, c))
             else:
                 print("\tNo spline fitted cube found.  Exiting!")
                 exit()
@@ -344,7 +340,8 @@ for b in beams:
                 # print("[CLEAN2] Determining the statistics from the repaired Beam {:02}, Cube {}.".format(b, c))              DELETE THIS WHEN NECESSARY *******************************
             nchan = f[0].data.shape[0]
             mask = np.ones(nchan, dtype=bool)
-            if c == 3: mask[376:662] = False
+            if c == 3:
+                mask[376:662] = False
             lineimagestats = [np.nanmin(f[0].data[mask]), np.nanmax(f[0].data[mask]), np.nanstd(f[0].data[mask])]
             f.close()
             print("\tImage min, max, std: {}".format(lineimagestats[:]))
@@ -408,7 +405,8 @@ for b in beams:
             else:
                 # dirty_cube = new_splinefits              DELETE THIS WHEN NECESSARY *******************************
                 dirty_cube = splinefits
-                outcube = line_cube[:-5] + '_rep'
+                # outcube = line_cube[:-5] + '_rep'             DELETE THIS WHEN NECESSARY *******************************
+                outcube = splinefits[:-5]  # + '_rep'
 
             new_cleanfits = outcube + '_clean.fits'
             os.system('cp {} {}'.format(dirty_cube, new_cleanfits))
@@ -467,7 +465,8 @@ for b in beams:
                 # Managing the work PARALLEL or SERIAL accordingly
                 if njobs > cpu_count():
                     print(
-                        "  [WARNING] The chosen number of NJOBS seems to be larger than the number of CPUs in the system!")
+                        "\t[WARNING] The chosen number of NJOBS seems to be larger than the number of CPUs"
+                        " in the system!")
 
                 # Create Queues
                 print("    - Creating Queues")
@@ -480,12 +479,13 @@ for b in beams:
 
                 # Start worker2 processes
                 print("    - Starting worker2 processes")
-                for p in ps: p.start()
+                for p in ps:
+                    p.start()
 
                 # Fill the queue
                 print("    - Filling up the queue")
                 for i in trange(ncases):
-                    inQueue.put((i))
+                    inQueue.put(i)
 
                 # Now running the processes
                 print("    - Running the processes")
@@ -518,8 +518,10 @@ for b in beams:
                             new_residualcube[0].header['HISTORY'] = hist
                         for hist in model_chan_hdr[-26:]['HISTORY']:
                             new_modelcube[0].header['HISTORY'] = hist
-                new_residualcube[0].header['HISTORY'] = 'Individual images reassembled using sourcefinding/clean2.py by KMHess'
-                new_modelcube[0].header['HISTORY'] = 'Individual images reassembled using sourcefinding/clean2.py by KMHess'
+                new_residualcube[0].header['HISTORY'] = \
+                    'Individual images reassembled using aper_sf2/clean2.py by KMHess'
+                new_modelcube[0].header['HISTORY'] = \
+                    'Individual images reassembled using aper_sf2/clean2.py by KMHess'
 
                 print(" - Saving the new model file")
                 new_modelcube.flush()
@@ -572,7 +574,7 @@ for b in beams:
                 fits.go()
 
             catalog = ascii.read(catalog_file, header_start=18)
-            catalog['taskid'] = taskid.replace('/', '')   #np.int(taskid.replace('/', ''))
+            catalog['taskid'] = taskid.replace('/', '')   # np.int(taskid.replace('/', ''))
             catalog['beam'] = b
             catalog['cube'] = c
             # Not sure that I've actually reordered anything.  This might be hold over that I gave up on:
