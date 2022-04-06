@@ -134,8 +134,9 @@ for b in beams:
     # Define some file names and work space:
     # loc = taskid + '/B0' + str(b).zfill(2) + '/'
     loc = taskid + '/'
-    # if args.mosaic:
-    #     loc = taskid + '/'
+    # Snakemake required input! (for now)
+    if args.mosaic:
+        loc = 'mos_' + taskid + '/'
     for c in cubes:
         # cube_name = 'HI_image_cube' + str(c)
         cube_name = 'HI_B0' + str(b).zfill(2) + '_cube' + str(c) + '_image'
@@ -266,7 +267,7 @@ for b in beams:
                 print("\tBeam {:02} Cube {} is not present in this directory.".format(b, c))
             continue
 
-        new_paramfile, outlog = make_param_file(loc_dir=loc, cube_name=cube_name, cube=c)
+        new_paramfile, outlog = make_param_file(loc_dir=loc, cube_name=cube_name, cube=c, mosaic=args.mosaic)
         try:
             print("[SOURCEFINDING] Cleaning up old mask and catalog files before source finding.")
             os.system('rm -rf ' + loc + cube_name + '*_sofia_*.fits ' + loc + cube_name + '*_sofia_cat.txt')
@@ -279,4 +280,4 @@ for b in beams:
         print(f"Do sofia: {toc1 - tic1:0.4f} seconds")
 
     # After all cubes are done, run checkmasks to get summary plots for cleaning:
-    checkmasks.main(taskid, [b], args.nospline, args.mosaic)
+    checkmasks.main(loc, taskid, [b], args.nospline, args.mosaic)
