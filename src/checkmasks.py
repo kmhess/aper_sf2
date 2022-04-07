@@ -153,8 +153,14 @@ def main(loc, taskid, beam=[40], nospline=False, mosaic=False):
                     for s in range(len(cat)):
                         ax_im[0, a-1].text(cat['col3'][s] + np.random.uniform(-40, 40),
                                            cat['col4'][s] + np.random.uniform(-40, 40),
-                                           cat['col2'][s], color='black')
-                        spectrum = np.nansum(hdu_spline[0].data[:, mask2d == cat['col2'][s]], axis=1)
+                                           cat['col2'][s], color='black', fontsize=16)
+                        # Do spectrum sums faster on subcubes:
+                        subcube = hdu_spline[0].data[:, int(cat['col8'][s]):int(cat['col9'][s])+1,
+                                                        int(cat['col6'][s]):int(cat['col7'][s])+1]
+                        submask = mask2d[int(cat['col8'][s]):int(cat['col9'][s])+1,
+                                         int(cat['col6'][s]):int(cat['col7'][s])+1]
+                        # spectrum = np.nansum(hdu_spline[0].data[:, mask2d == cat['col2'][s]], axis=1)
+                        spectrum = np.nansum(subcube[:, submask == cat['col2'][s]], axis=1)
                         maskmin = chan2freq(cat['col10'][s],
                                             hdu_header=hdu_spline[0].header).to(u.km/u.s, equivalencies=optical_HI).value
                         maskmax = chan2freq(cat['col11'][s],
