@@ -13,7 +13,7 @@ def filter2d(loc, taskid, beam, cube, mosaic=False, overwrite=False):
         cube_name = taskid + '_HIcube' + str(cube) + '_image'
 
     filter2d_name = loc + cube_name + '_filtered-2d.fits'
-    mask2d_name = loc + cube_name + '_sofia_mask-2d.fits'
+    mask2d_name = loc + cube_name + '_sofiaFS_mask-2d.fits'
     filter3d_name = loc + cube_name + '_filtered.fits'
 
     # If the filtered-2d file doesn't exist and we have a template, make the filtered-2d:
@@ -45,7 +45,7 @@ def filter2dto3d(taskid, beam, cube, overwrite=False):
     cube_name = 'HI_B0' + str(beam).zfill(2) + '_cube' + str(cube) + '_image'
 
     filter2d_name = loc + cube_name + '_filtered-2d.fits'
-    mask2d_name = loc + cube_name + '_sofia_mask-2d.fits'
+    mask2d_name = loc + cube_name + '_sofiaFS_mask-2d.fits'
     filter3d_name = loc + cube_name + '_filtered.fits'
 
     return
