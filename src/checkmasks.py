@@ -31,6 +31,9 @@ def parse_args():
                         help='Specify a range (0-39) or list (3,5,7,11) of beams on which to do source finding'
                              ' (default: %(default)s).')
 
+    parser.add_argument('-c', '--cubes', default='1,2,3', required=True,
+                        help='Specify the cubes on which to do source finding (default: %(default)s).')
+
     parser.add_argument('-n', "--nospline",
                         help="Only controls output name of png!  For book keeping purposes.",
                         action='store_true')
@@ -45,9 +48,9 @@ def parse_args():
 
 
 # If running by itself use: python -m src/checkmasks -t 191004041 -b 14
-def main(loc, taskid, beam=[40], nospline=False, mosaic=False):
+def main(loc, taskid, beam=[40], cubes=[1, 2, 3], nospline=False, mosaic=False):
 
-    cubes = [1, 2, 3]  # Most sources in 2; nearest galaxies in 3.
+    # cubes = [1, 2, 3]  # Most sources in 2; nearest galaxies in 3.
     max_cat_len = 35
 
     HI_restfreq = 1420405751.77 * u.Hz
@@ -58,9 +61,9 @@ def main(loc, taskid, beam=[40], nospline=False, mosaic=False):
     for b in beam:
         # Define some file names and work space:
         source_per_beam = 0
-        results = glob(loc + 'HI_B0{:02}_cube*sofia_mask-2d.fits'.format(b))
+        results = glob(loc + 'HI_B0{:02}_cube*sofiaFS_mask-2d.fits'.format(b))
         if mosaic:
-            results = glob(loc + taskid + '_HIcube*_image_sofia_mask-2d.fits')
+            results = glob(loc + taskid + '_HIcube*_image_sofiaFS_mask-2d.fits')
         # Output where the program is looking exactly
         print(loc)
 
@@ -69,7 +72,7 @@ def main(loc, taskid, beam=[40], nospline=False, mosaic=False):
             header = fits.getheader(results[0])
             wcs = WCS(header)
             if mosaic:
-                fig_im, ax_im = plt.subplots(1, 1, figsize=(15, 12), subplot_kw={'projection': wcs}, squeeze=False)
+                fig_im, ax_im = plt.subplots(1, 1, figsize=(36, 30), subplot_kw={'projection': wcs}, squeeze=False)
             else:
                 fig_im, ax_im = plt.subplots(1, 3, figsize=(15, 5), subplot_kw={'projection': wcs})
 
@@ -77,8 +80,8 @@ def main(loc, taskid, beam=[40], nospline=False, mosaic=False):
                 cube_name = 'HI_image_cube' + str(c)
                 if mosaic:
                     cube_name = taskid + '_HIcube' + str(c) + '_image'
-                if os.path.isfile(loc + cube_name + '_sofia_cat.txt'):
-                    cat = ascii.read(loc + cube_name + '_sofia_cat.txt')
+                if os.path.isfile(loc + cube_name + '_sofiaFS_cat.txt'):
+                    cat = ascii.read(loc + cube_name + '_sofiaFS_cat.txt')
                     if len(cat) > max_cat_len:
                         cat = cat[:max_cat_len]
                     source_per_beam += len(cat)
@@ -109,26 +112,26 @@ def main(loc, taskid, beam=[40], nospline=False, mosaic=False):
                     filter2d_im[np.isnan(filter2d_im)] = 9.
                     filter2d_im[filter2d_im < 9] = np.nan
                     hdu_filter.close()
-                # elif os.path.isfile(loc + cube_name + '_filtered_spline.fits'):
-                #     print("\tShould not be here!")
-                #     hdu_filter = fits.open(loc + cube_name + '_filtered_spline.fits')
-                #     # SVC data has the 0th channel blanked; so use the first channel instead.
-                #     filter2d_im = hdu_filter[0].data[1, :, :]
-                #     filter2d_im[np.isnan(filter2d_im)] = 9.
-                #     filter2d_im[filter2d_im < 9] = np.nan
-                #     hdu_filter.close()
+                elif os.path.isfile(loc + cube_name + '_filtered_spline.fits'):
+                    print("\tShould not be here!")
+                    hdu_filter = fits.open(loc + cube_name + '_filtered_spline.fits')
+                    # SVC data has the 0th channel blanked; so use the first channel instead.
+                    filter2d_im = hdu_filter[0].data[1, :, :]
+                    filter2d_im[np.isnan(filter2d_im)] = 9.
+                    filter2d_im[filter2d_im < 9] = np.nan
+                    hdu_filter.close()
                 else:
                     print("\tNo continuum filtered file for Beam {:02} Cube {}. Check sourcefinding/ALTA?".format(b, c))
                     # As a precaution, if there is no filtered cube, don't plot source masks either.
                     continue
 
-                if os.path.isfile(loc + cube_name + '_sofia_cat.txt'):
-                    cat = ascii.read(loc + cube_name + '_sofia_cat.txt')
+                if os.path.isfile(loc + cube_name + '_sofiaFS_cat.txt'):
+                    cat = ascii.read(loc + cube_name + '_sofiaFS_cat.txt')
                     print("\tFound {} sources in Beam {:02} Cube {}".format(len(cat), b, c))
                     if len(cat) > max_cat_len:
                         print("\tMore than {} candidates: seems this cube is crap".format(max_cat_len))
                         cat = cat[:max_cat_len]
-                    hdu_mask = fits.open(loc + cube_name + '_sofia_mask-2d.fits')
+                    hdu_mask = fits.open(loc + cube_name + '_sofiaFS_mask-2d.fits')
                     mask2d = hdu_mask[0].data[:, :]
 
                     mask2d = np.asfarray(mask2d)
@@ -136,9 +139,9 @@ def main(loc, taskid, beam=[40], nospline=False, mosaic=False):
 
                     # if os.path.isfile(loc + cube_name + '_all_spline.fits'):
                     #     hdu_spline = fits.open(loc + cube_name + '_all_spline.fits')
-                    # elif os.path.isfile(loc + cube_name + '_filtered_spline.fits'):
-                    #     hdu_spline = fits.open(loc + cube_name + '_filtered_spline.fits')
-                    hdu_spline = fits.open(loc + cube_name + '_spline.fits')
+                    if os.path.isfile(loc + cube_name + '_filtered_spline.fits'):
+                        hdu_spline = fits.open(loc + cube_name + '_filtered_spline.fits')
+                    # hdu_spline = fits.open(loc + cube_name + '_spline.fits')
                     cube_frequencies = chan2freq(np.array(range(hdu_spline[0].data.shape[0])), hdu_header=hdu_spline[0].header)
                     optical_velocity = cube_frequencies.to(u.km/u.s, equivalencies=optical_HI)
 
@@ -150,10 +153,11 @@ def main(loc, taskid, beam=[40], nospline=False, mosaic=False):
                     ax_im[0, a-1].set_title("Beam {:02} Cube {}".format(b, c))
                     ra = ax_im[0, a - 1].coords[0]  # Don't understand why this doesn't work: python 2.7 vs 3?
                     ra.set_format_unit(u.hour)
+                    ax_im[0, a-1].tick_params(axis='both', which='major', labelsize=18)
                     for s in range(len(cat)):
                         ax_im[0, a-1].text(cat['col3'][s] + np.random.uniform(-40, 40),
                                            cat['col4'][s] + np.random.uniform(-40, 40),
-                                           cat['col2'][s], color='black', fontsize=16)
+                                           cat['col2'][s], color='black', fontsize=20)
                         # Do spectrum sums faster on subcubes:
                         subcube = hdu_spline[0].data[:, int(cat['col8'][s]):int(cat['col9'][s])+1,
                                                         int(cat['col6'][s]):int(cat['col7'][s])+1]
@@ -172,8 +176,8 @@ def main(loc, taskid, beam=[40], nospline=False, mosaic=False):
                                                       ':', color='gray')
                         ax_spec[previous + s, 0].plot([maskmax, maskmax], [np.nanmin(spectrum), np.nanmax(spectrum)],
                                                       ':', color='gray')
-                        ax_spec[previous + s, 0].set_title("Beam {:02}, Cube {}, Source {}".format(b, c,
-                                                                                                   cat['col2'][s]))
+                        ax_spec[previous + s, 0].set_title("Beam {:02}, Cube {}, Source {}".format(b, c, cat['col2'][s]),
+                                                           fontsize=20)
                         ax_spec[previous + s, 0].set_xlim(optical_velocity[-1].value, optical_velocity[0].value)
                         if (np.nanmax(spectrum) > 2.) | (np.nanmin(spectrum) < -2.):
                             ax_spec[previous + s, 0].set_ylim(np.nanmax(spectrum[cat['col10'][s]:cat['col11'][s]]) * -2,
@@ -213,7 +217,9 @@ if __name__ == '__main__':
     arguments = parse_args()
     # Range of beams to work on:
     taskid = arguments.taskid
+    cubes = [int(c) for c in args.cubes.split(',')]
     mosaic = arguments.mosaic
+    nospline = arguments.nospline
     loc = arguments.loc
     if '-' in arguments.beams:
         b_range = arguments.beams.split('-')
@@ -223,4 +229,4 @@ if __name__ == '__main__':
     if loc[-1] != '/':
         loc = loc + '/'
 
-    main(loc, taskid, beams, mosaic=mosaic)
+    main(loc, taskid, beams, cubes=cubes, nospline=nospline, mosaic=mosaic)
