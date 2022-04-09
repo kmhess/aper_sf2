@@ -30,7 +30,7 @@
 ###                                                                      ###
 
 
-# Default parameter settings for SoFiA
+# Default parameter settings for Apertif for individual beams
 # Please do not modify!
 
 
@@ -38,7 +38,7 @@
 
 pipeline.verbose           =  false
 pipeline.pedantic          =  true     # Keep this true!  Detects new *big* features in SoFiA
-pipeline.threads           =  22
+pipeline.threads           =  20
 
 
 # Input
@@ -127,7 +127,7 @@ linker.maxSizeXY           =  300
 linker.maxSizeZ            =  140
 linker.minPixels           =  0
 linker.maxPixels           =  0
-linker.minFill             =  0.0
+linker.minFill             =  0.05
 linker.maxFill             =  0.0
 linker.positivity          =  false
 linker.keepNegative        =  false
@@ -138,7 +138,7 @@ linker.keepNegative        =  false
 reliability.enable         =  true
 reliability.parameters     =  peak, sum, mean
 reliability.threshold      =  0.85
-reliability.scaleKernel    =  0
+reliability.scaleKernel    =  0.2
 reliability.minSNR         =  12.0
 reliability.minPixels      =  200
 reliability.autoKernel     =  true
@@ -163,7 +163,7 @@ parameter.enable           =  true
 parameter.wcs              =  true
 parameter.physical         =  true
 parameter.prefix           =  SoFiA
-parameter.offset           =  false
+parameter.offset           =  true
 
 
 # Output
@@ -179,7 +179,7 @@ output.writeMask           =  true
 output.writeMask2d         =  true
 output.writeRawMask        =  false
 output.writeMoments        =  false
-output.writeCubelets       =  true
+output.writeCubelets       =  false
 output.marginCubelets      =  10
 output.thresholdMom12      =  0.0
 output.overwrite           =  true
