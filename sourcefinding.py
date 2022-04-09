@@ -18,12 +18,15 @@ dir_name = os.path.dirname(__file__)
 def make_param_file(loc_dir=None, cube_name=None, cube=None, mosaic=False):
     param_template = dir_name + '/sofia_parameter_template.par'
     new_paramfile = loc_dir + 'sofia_parameter.par'
+    if mosaic == True:
+        param_template = dir_name + '/mosaic_parameter_template.par'
+        new_paramfile = loc_dir + 'mosaic_parameter.par'
     outlog = loc_dir + 'sourcefinding.out'
 
     # Edit parameter file (remove lines that need editing)
     os.system('grep -vwE "(input.data)" ' + param_template + ' > ' + new_paramfile)
-    if mosaic:
-        os.system('grep -vwE "(input.noise)" ' + new_paramfile + ' > temp && mv temp ' + new_paramfile)
+    # if mosaic:                          # FILTERED SPLINE ALREADY HAS NOISE CORRECTION APPLIED!
+    #     os.system('grep -vwE "(input.noise)" ' + new_paramfile + ' > temp && mv temp ' + new_paramfile)  #
     os.system('grep -vwE "(output.filename)" ' + new_paramfile + ' > temp && mv temp ' + new_paramfile)
     if cube == 3:
         os.system('grep -vwE "(flag.region)" ' + new_paramfile + ' > temp && mv temp ' + new_paramfile)
@@ -33,14 +36,15 @@ def make_param_file(loc_dir=None, cube_name=None, cube=None, mosaic=False):
     # Add back the parameters needed
     if not args.nospline:
         os.system('echo "input.data                 =  ' + splinefits + '" >> ' + new_paramfile)
-        outroot = cube_name + '_sofia'
+        # outroot = cube_name + '_sofia'          #
+        outroot = cube_name + '_sofiaFS'
     else:
         os.system('echo "input.data                 =  ' + filteredfits + '" >> ' + new_paramfile)
         outroot = cube_name + '_sofiaB'
 
     os.system('echo "output.filename            =  ' + outroot + '" >> ' + new_paramfile)
-    if mosaic:
-        os.system('echo "input.noise                =  ' + noisefits + '" >> ' + new_paramfile)
+    # if mosaic:                          # FILTERED SPLINE ALREADY HAS NOISE CORRECTION APPLIED!
+    #     os.system('echo "input.noise                =  ' + noisefits + '" >> ' + new_paramfile)  #
     if cube == 3:
         os.system('echo "flag.region                =  0,661,0,661,375,601" >> ' + new_paramfile)
         os.system('echo "linker.maxSizeXY           =  250" >> ' + new_paramfile)
@@ -135,8 +139,8 @@ for b in beams:
     # loc = taskid + '/B0' + str(b).zfill(2) + '/'
     loc = taskid + '/'
     # Snakemake required input! (for now)
-    if args.mosaic:
-        loc = 'mos_' + taskid + '/'
+    if args.mosaic:                                             # Enable while using snakemake
+        loc = 'mos_' + taskid + '/'                               # Enable while using snakemake
     for c in cubes:
         # cube_name = 'HI_image_cube' + str(c)
         cube_name = 'HI_B0' + str(b).zfill(2) + '_cube' + str(c) + '_image'
@@ -151,8 +155,8 @@ for b in beams:
 
         sourcefits = loc + cube_name + '.fits'
         filteredfits = loc + cube_name + '_filtered.fits'
-        # splinefits = loc + cube_name + '_filtered_spline.fits'              DELETE THIS WHEN NECESSARY *******************************
-        splinefits = loc + cube_name + '_spline.fits'
+        splinefits = loc + cube_name + '_filtered_spline.fits'              #DELETE THIS WHEN NECESSARY *******************************
+        # splinefits = loc + cube_name + '_spline.fits'                     #
         # Output exactly where sourcefinding is starting
         print('\t' + sourcefits)
 
@@ -180,12 +184,13 @@ for b in beams:
         if (not overwrite) & os.path.isfile(splinefits):
             print("[SOURCEFINDING] Spline fitted file exists and will not be overwritten.")
         elif os.path.isfile(filteredfits) & (not args.nospline):
+            print("[SOURCEFINDING] Spline fitting this file: {}.".format(filteredfits))
             print(" - Loading the input cube")
-            # os.system('cp {} {}'.format(filteredfits, splinefits))              DELETE THIS WHEN NECESSARY *******************************
-            os.system('cp {} {}'.format(sourcefits, splinefits))
+            os.system('cp {} {}'.format(filteredfits, splinefits))              #DELETE THIS WHEN NECESSARY *******************************
+            # os.system('cp {} {}'.format(sourcefits, splinefits))              #
             splinecube = fits.open(splinefits, mode='update')
-            # orig = fits.open(filteredfits)                                 DELETE THIS WHEN NECESSARY *******************************
-            orig = fits.open(sourcefits)
+            orig = fits.open(filteredfits)                                 #DELETE THIS WHEN NECESSARY *******************************
+            # orig = fits.open(sourcefits)                                 #
             orig_data = orig[0].data
             splinecube_data = splinecube[0].data
 
@@ -270,7 +275,7 @@ for b in beams:
         new_paramfile, outlog = make_param_file(loc_dir=loc, cube_name=cube_name, cube=c, mosaic=args.mosaic)
         try:
             print("[SOURCEFINDING] Cleaning up old mask and catalog files before source finding.")
-            os.system('rm -rf ' + loc + cube_name + '*_sofia_*.fits ' + loc + cube_name + '*_sofia_cat.txt')
+            # os.system('rm -rf ' + loc + cube_name + '*_sofia_*.fits ' + loc + cube_name + '*_sofia_cat.txt')
         except:
             pass
         print("[SOURCEFINDING] Doing source finding with SoFiA parameter file {}.".format(new_paramfile))
@@ -280,4 +285,4 @@ for b in beams:
         print(f"Do sofia: {toc1 - tic1:0.4f} seconds")
 
     # After all cubes are done, run checkmasks to get summary plots for cleaning:
-    checkmasks.main(loc, taskid, [b], args.nospline, args.mosaic)
+    checkmasks.main(loc, taskid, [b], cubes=cubes, nospline=args.nospline, mosaic=args.mosaic)
