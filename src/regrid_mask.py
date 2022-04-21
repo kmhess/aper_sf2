@@ -48,7 +48,7 @@ def main(taskid, beams, cubes):
         for b in beams:
             image_file = loc[4:] + 'HI_B0' + str(b).zfill(2) + '_cube' + str(c) + '_image.fits'
 
-            if not os.path.isfile(image_file):
+            if not os.path.isfile(image_file[:-5] + '_mask_bin.fits'):
                 print("[REGRID_MASK] Regridding {} mosaic mask to cube {}, beam {}".format(taskid, c, b))
                 template = fits.getheader(image_file)
 

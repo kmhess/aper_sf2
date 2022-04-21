@@ -79,9 +79,6 @@ for c in cubes:
         bin_mask[:, y[s], x[s]] = bin_mask_lin
         # print(x[s],y[s])
 
-        if (x[s] == 600) & (y[s] == 1240):
-            print(x[s], y[s], mask_lin[670:675], bin_mask_lin[670:675], bin_mask[670:675, y[s], x[s]])
-
     toc1 = testtime.perf_counter()
     print(f"Do binary mask: {toc1 - tic1:0.4f} seconds")
     # return
