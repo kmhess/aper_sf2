@@ -1,7 +1,9 @@
 from argparse import ArgumentParser, RawTextHelpFormatter
+import os
 import time as testtime
 
 from astropy.io import fits
+from astropy.wcs import WCS
 import numpy as np
 from reproject import reproject_interp
 
@@ -37,20 +39,59 @@ def main(taskid, beams, cubes):
         mask_file = loc + taskid + '_HIcube' + str(c) + '_image_sofiaFS_mask_bin.fits'
         mask = fits.open(mask_file)
 
+        mask2d_file = loc + taskid + '_HIcube' + str(c) + '_image_sofiaFS_mask-2d.fits'
+        mask2d = fits.open(mask2d_file)
+
+        filt2d_file = loc + taskid + '_HIcube' + str(c) + '_image_filtered-2d.fits'
+        filt2d = fits.open(filt2d_file)
+
         for b in beams:
-            print("[REGRID_MASK] Regridding {} mosaic mask to cube {}, beam {}".format(taskid, c, b))
             image_file = loc[4:] + 'HI_B0' + str(b).zfill(2) + '_cube' + str(c) + '_image.fits'
-            template = fits.getheader(image_file)
 
-            tic1 = testtime.perf_counter()
-            mask_reproj, footprint = reproject_interp(mask, template)
-            toc1 = testtime.perf_counter()
-            print(f"Do mask reprojection: {toc1 - tic1:0.4f} seconds")
+            if not os.path.isfile(image_file):
+                print("[REGRID_MASK] Regridding {} mosaic mask to cube {}, beam {}".format(taskid, c, b))
+                template = fits.getheader(image_file)
 
-            new_mask = fits.PrimaryHDU(data=mask_reproj, header=template)
-            new_mask.writeto(image_file[:-5] + '_mask_bin.fits')
+                tic1 = testtime.perf_counter()
+                mask_reproj, footprint = reproject_interp(mask, template)
+                toc1 = testtime.perf_counter()
+                print(f"Do mask reprojection: {toc1 - tic1:0.4f} seconds")
+
+                new_mask = fits.PrimaryHDU(data=mask_reproj, header=template)
+                new_mask.writeto(image_file[:-5] + '_mask_bin.fits')
+            else:
+                print("[REGRID_MASK] Regridded {} cube {}, bm {} mask already exists. Continuing.".format(taskid, c, b))
+
+            if not os.path.isfile(image_file[:-5] + '_mask-2d.fits'):
+                print("[REGRID_MASK] Regridding {} 2D mask to cube {}, beam {}".format(taskid, c, b))
+                template = fits.getheader(image_file)
+
+                tic1 = testtime.perf_counter()
+                mask_reproj, footprint = reproject_interp(mask2d, WCS(template).celestial, [template['NAXIS1'], template['NAXIS2']])
+                toc1 = testtime.perf_counter()
+                print(f"Do mask reprojection: {toc1 - tic1:0.4f} seconds")
+
+                new_mask = fits.PrimaryHDU(data=mask_reproj, header=template)
+                new_mask.writeto(image_file[:-5] + '_mask-2d.fits')
+            else:
+                print("[REGRID_MASK] Regridded {} cube {}, bm {} 2D mask already exists.".format(taskid, c, b))
+
+            if not os.path.isfile(image_file[:-5] + '_filtered-2d.fits'):
+                print("[REGRID_MASK] Regridding {} 2D filtered data to cube {}, beam {}".format(taskid, c, b))
+                template = fits.getheader(image_file)
+
+                tic1 = testtime.perf_counter()
+                mask_reproj, footprint = reproject_interp(filt2d, WCS(template).celestial, [template['NAXIS1'], template['NAXIS2']])
+                toc1 = testtime.perf_counter()
+                print(f"Do mask reprojection: {toc1 - tic1:0.4f} seconds")
+
+                new_mask = fits.PrimaryHDU(data=mask_reproj, header=template)
+                new_mask.writeto(image_file[:-5] + '_filtered-2d.fits')
+            else:
+                print("[REGRID_MASK] Regridded {} cube {}, bm {} 2D filtered data already exists.".format(taskid, c, b))
 
         mask.close()
+        mask2d.close()
 
     return
 
