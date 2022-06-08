@@ -1,9 +1,39 @@
+import os
+
 from argparse import ArgumentParser, RawTextHelpFormatter
 import time as testtime
 
 from astropy.io import ascii, fits
 import numpy as np
 
+from multiprocessing import Queue, Process, cpu_count
+from tqdm.auto import trange
+
+
+def worker(inQueue, outQueue):
+
+    """
+    Defines the worker process of the parallelisation with multiprocessing.Queue
+    and multiprocessing.Process.
+    """
+    for i in iter(inQueue.get, 'STOP'):
+
+        status = run(i)
+
+        outQueue.put(( status ))
+
+def run(i):
+    global mask2d
+
+    try:
+        mask_lin = mask[:, y[i], x[i]]
+        bin_mask_lin = np.array([1 if m in sources else 0 for m in mask_lin])
+        mask2d[y[i], x[i]] = np.nanmax(bin_mask_lin)
+        return 'OK'
+
+    except Exception:
+        print("[ERROR] Something went wrong with the Spline fitting [" + str(i) + "]")
+        return np.nan
 
 ###################################################################
 
@@ -26,6 +56,10 @@ parser.add_argument('-s', '--sources', default='all',
                     help='Specify the sources included in the binary mask.'
                          ' (default: %(default)s).')
 
+parser.add_argument('-j', "--njobs",
+                    help="Number of jobs to run in parallel (default: %(default)s) tested on happili-05.",
+                    default=18)
+
 # Parse the arguments above
 args = parser.parse_args()
     # return args
@@ -38,6 +72,7 @@ args = parser.parse_args()
 taskid = args.taskid
 cubes = args.cubes
 sources = args.sources
+njobs = args.njobs
 
 loc = 'mos_' + taskid + '/'
 
@@ -61,9 +96,15 @@ for c in cubes:
     bin_mask2d_file = loc + cube_name + '_sofiaFS_mask-2d_bin.fits'
     print("[BINARY_MASK] Making {} binary mask including requested sources: {}".format(taskid, sources))
 
-    # Define what lines of sight need to be kept based on input sources numbers
-    mask2d_hdu = fits.open(mask_file2d)
+    os.system('cp {} {}'.format(mask_file2d, bin_mask2d_file))
+    mask2d_hdu = fits.open(bin_mask2d_file, mode='update')
     mask2d = mask2d_hdu[0].data
+
+    mask_hdu = fits.open(mask_file)
+    mask = mask_hdu[0].data
+
+    # Define what lines of sight need to be kept based on input sources numbers
+    print(" - Defining the cases to analyse")
     xx, yy = range(mask2d.shape[1]), range(mask2d.shape[0])
     x, y = np.meshgrid(xx, yy)
     x, y = x.ravel(), y.ravel()
@@ -72,22 +113,57 @@ for c in cubes:
     # src2d = np.array([True if m in sources else False for m in mask2d_lin])
     src2d = np.array([True if m > 0 else False for m in mask2d_lin])
     x, y, mask2d_lin = x[src2d], y[src2d], mask2d_lin[src2d]
+    ncases = len(x)
+    print(" - " + str(ncases) + " cases found")
 
-    tic1 = testtime.perf_counter()
-    mask_hdu = fits.open(mask_file)
-    mask = mask_hdu[0].data
-    bin_mask2d = np.zeros(mask2d.shape)
+    if njobs > 1:
+        print(" - Running in parallel mode (" + str(njobs) + " jobs simultaneously)")
+    elif njobs == 1:
+        print(" - Running in serial mode")
+    else:
+        print("[ERROR] invalid number of NJOBS. Please use a positive number.")
+        exit()
 
-    for s in range(len(x)):
-        mask_lin = mask[:, y[s], x[s]]
-        bin_mask_lin = np.array([1 if m in sources else 0 for m in mask_lin])
-        bin_mask2d[y[s], x[s]] = np.nanmax(bin_mask_lin)
+    # Managing the work PARALLEL or SERIAL accordingly
+    if njobs > cpu_count():
+        print(
+            "  [WARNING] The chosen number of NJOBS seems to be larger than the number of CPUs in the system!")
 
-    toc1 = testtime.perf_counter()
-    print(f"Do binary mask: {toc1 - tic1:0.4f} seconds")
+    # Create Queues
+    print("    - Creating Queues")
+    inQueue = Queue()
+    outQueue = Queue()
 
-    bin_hdu = fits.PrimaryHDU(data=bin_mask2d, header=mask2d_hdu[0].header)
-    bin_hdu.writeto(bin_mask2d_file, overwrite=True)
+    # Create worker processes
+    print("    - Creating worker processes")
+    ps = [Process(target=worker, args=(inQueue, outQueue)) for _ in range(njobs)]
+
+    # Start worker processes
+    print("    - Starting worker processes")
+    for p in ps: p.start()
+
+    # Fill the queue
+    print("    - Filling up the queue")
+    for i in trange(ncases):
+        inQueue.put((i))
+
+    # Now running the processes
+    print("    - Running the processes")
+    output = [outQueue.get() for _ in trange(ncases)]
+
+    # Send stop signal to stop iteration
+    for _ in range(njobs): inQueue.put('STOP')
+
+    # Stop processes
+    print("    - Stopping processes")
+    for p in ps: p.join()
+
+    # Updating the Splinecube file with the new data
+    print(" - Updating the Splinecube file")
+    # bin_hdu = fits.PrimaryHDU(data=bin_mask2d, header=mask2d_hdu[0].header)
+    # bin_hdu.writeto(bin_mask2d_file, overwrite=True)
+    mask2d_hdu.data = mask2d
+    mask2d_hdu.flush()
 
     mask2d_hdu.close()
     mask_hdu.close()
