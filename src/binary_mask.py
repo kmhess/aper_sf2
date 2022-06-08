@@ -33,8 +33,6 @@ args = parser.parse_args()
 ###################################################################
 
 
-# To do: Instead of supplying sources, allow option to read in the edited catalog
-
 # def binary_mask(taskid, cubes, sources, njobs):
 
 taskid = args.taskid
@@ -45,11 +43,13 @@ loc = 'mos_' + taskid + '/'
 
 for c in cubes:
     cube_name = taskid + '_HIcube' + str(c) + '_image'
-    catalog_file = loc + cube_name + '_sofiaFS_cat.txt'
+    # Take modified catalogs based on first inspection of source quality
+    catalog_file = loc + cube_name + '_sofiaFS_cat_edit.txt'
     catalog = ascii.read(catalog_file, header_start=18)
 
+    # Change behavior so 'all' refers to all in catalog, rather than all in image (unedited catalog)
     if sources == 'all':
-        sources = [int(s + 1) for s in range(len(catalog))]
+        sources = np.array(catalog['id'])
     elif '-' in sources:
         mask_range = sources.split('-')
         sources = [int(s + int(mask_range[0])) for s in range(int(mask_range[1]) - int(mask_range[0]) + 1)]
