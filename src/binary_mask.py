@@ -23,12 +23,13 @@ def worker(inQueue, outQueue):
         outQueue.put(( status ))
 
 def run(i):
-    global mask2d
+    global mask2d, mask
 
     try:
         mask_lin = mask[:, y[i], x[i]]
         bin_mask_lin = np.array([1 if m in sources else 0 for m in mask_lin])
         mask2d[y[i], x[i]] = np.nanmax(bin_mask_lin)
+        mask[:, y[i], x[i]] = bin_mask_lin
         return 'OK'
 
     except Exception:
@@ -92,15 +93,17 @@ for c in cubes:
         sources = [int(s) for s in sources.split(',')]
 
     mask_file = loc + cube_name + '_sofiaFS_mask.fits'
-    mask_file2d = loc + cube_name + '_sofiaFS_mask-2d.fits'
+    bin_mask_file = loc + cube_name + '_sofiaFS_mask_bin.fits'
+    mask2d_file = loc + cube_name + '_sofiaFS_mask-2d.fits'
     bin_mask2d_file = loc + cube_name + '_sofiaFS_mask-2d_bin.fits'
     print("[BINARY_MASK] Making {} binary mask including requested sources: {}".format(taskid, sources))
 
-    os.system('cp {} {}'.format(mask_file2d, bin_mask2d_file))
+    os.system('cp {} {}'.format(mask2d_file, bin_mask2d_file))
     mask2d_hdu = fits.open(bin_mask2d_file, mode='update')
     mask2d = mask2d_hdu[0].data
 
-    mask_hdu = fits.open(mask_file)
+    os.system('cp {} {}'.format(mask_file, bin_mask_file))
+    mask_hdu = fits.open(bin_mask_file, mode='update')
     mask = mask_hdu[0].data
 
     # Define what lines of sight need to be kept based on input sources numbers
@@ -163,7 +166,9 @@ for c in cubes:
     # bin_hdu = fits.PrimaryHDU(data=bin_mask2d, header=mask2d_hdu[0].header)
     # bin_hdu.writeto(bin_mask2d_file, overwrite=True)
     mask2d_hdu.data = mask2d
+    mask_hdu.data = mask
     mask2d_hdu.flush()
+    mask_hdu.flush()
 
     mask2d_hdu.close()
     mask_hdu.close()
