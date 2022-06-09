@@ -112,6 +112,9 @@ with fits.open('{}'.format(postGridMask), mode='update') as hdul:
 
 print('  Reprojected mask {} written to disc'.format(postGridMask))
 print('  Cleaning up temporary files')
-os.remove(preGridMaskNew)
+try:
+    os.remove(preGridMaskNew)
+except:
+    pass
 os.remove(postGridMask.replace('_regrid.fits', '_regrid_area.fits'))
 os.remove('tmp.hdr')
