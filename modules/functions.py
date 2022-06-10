@@ -13,6 +13,7 @@ def chan2freq(channels=None, hdu_header=None):
 
 
 # ----------------------------------------------
+# DEPRECATED!  This is unnecessary now.  Was fixing an error that I introduced.
 def fix_beam_header(beam_full):
     beam = fits.open(beam_full, mode='update')
     beam[0].header['CRPIX1'] = (beam[0].header['NAXIS1']+1)/2

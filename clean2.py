@@ -17,7 +17,7 @@ from apercal.libs import lib
 from apercal.subs import managefiles
 import apercal
 
-from modules.functions import fix_beam_header, write_catalog
+from modules.functions import write_catalog
 
 
 def worker(inQueue, outQueue):
@@ -391,8 +391,7 @@ for b in beams:
                     os.system('iget {}{}_AP_B0{:02}/HI_beam_cube{}.fits {}'.format(alta_dir, taskid, b, c, loc))
                 print("[CLEAN2] Expanding synthesized beam.")
                 trim_beam.main(beam_half, beam_cube, 1)
-            fix_beam_header(beam_cube)
-
+            
             fits.in_ = beam_cube
             fits.out = 'beam_00'
             fits.go()
