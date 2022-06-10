@@ -89,7 +89,7 @@ with fits.open('{}'.format(postGridMask), mode='update') as hdul:
             else:
                 toAdd = np.zeros([hdul[0].header['NAXIS3'], delt, hdul[0].data.shape[2]])
             hdul[0].data = np.concatenate([toAdd, hdul[0].data], axis=axDict[i][0])
-            hdul[0].header['CRPIX'+i] = int(cent + delt)
+            hdul[0].header['CRPIX'+i] = cent + delt
         if hdul[0].data.shape[axDict[i][0]] < axDict[i][1]:
             delt = int(axDict[i][1] - hdul[0].data.shape[axDict[i][0]])
             if i == '1':
