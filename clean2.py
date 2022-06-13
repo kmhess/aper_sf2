@@ -6,7 +6,7 @@ from modules.natural_cubic_spline import fspline
 from src import trim_beam
 
 from argparse import ArgumentParser, RawTextHelpFormatter
-from astropy.io import ascii
+# from astropy.io import ascii
 import astropy.io.fits as pyfits
 import numpy as np
 
@@ -17,7 +17,7 @@ from apercal.libs import lib
 from apercal.subs import managefiles
 import apercal
 
-from modules.functions import write_catalog
+# from modules.functions import write_catalog
 
 
 def worker(inQueue, outQueue):
@@ -34,23 +34,6 @@ def run(i):
     global new_splinecube_data
 
     try:
-        # # Do the spline fitting on the z-axis to masked cube
-        # # First, replace the previous continuum filtered pixels with spline fitted values, without masking:
-        # if np.isnan(filtered_pixels[x[i], y[i]]):  # | (str(mask2d[x[i], y[i]]) not in sources):
-        #     temp = np.copy(orig_data[:, x[i], y[i]])
-        #     fit = fspline(np.linspace(1, orig_data.shape[0], orig_data.shape[0]), np.nan_to_num(temp), k=5)
-        #     new_splinecube_data[:, x[i], y[i]] = temp - fit
-        # # Second, use source mask to undo potential over subtraction:
-        # if str(mask2d[x[i], y[i]]) in sources:
-        #     s = mask2d[x[i], y[i]]
-        #     zmin, zmax = np.int(catalog[catalog['id'] == s]['z_min']), np.int(catalog[catalog['id'] == s]['z_max'])
-        #     temp = np.copy(orig_data[:, x[i], y[i]])
-        #     # Currently nan --> 0, but could try N (10) nearest neighbors instead...
-        #     # This also doesn't deal with multiple sources along the line of sight...(but then can't do N-nn)
-        #     temp[zmin:zmax] = np.nan
-        #     fit = fspline(np.linspace(1, orig_data.shape[0], orig_data.shape[0]), np.nan_to_num(temp), k=12)
-        #     new_splinecube_data[:, x[i], y[i]] = orig_data[:, x[i], y[i]] - fit
-
         # Do the spline fitting on the z-axis to masked cube
         fit = fspline(np.linspace(1, orig_data.shape[0], orig_data.shape[0]),
                       np.nan_to_num(new_splinecube_data[:, x[i], y[i]]), k=5)
@@ -142,9 +125,6 @@ def run2(i):
 
     return 'OK'
 
-    # except Exception:
-    #     print("[ERROR] Something went wrong with the cleaning! [Channel {}]".format(chan[i]))
-    #     return np.nan
 
 ###################################################################
 
@@ -224,7 +204,6 @@ for b in beams:
     loc = taskid + '/'
     mask_loc = 'mos_' + taskid + '/'
     print("\t{}".format(loc))
-    # clean_catalog = loc + 'clean_cat.txt'
 
     managefiles.director(prepare, 'ch', loc)
 
@@ -233,14 +212,9 @@ for b in beams:
         beam_name = 'HI_B0' + str(b).zfill(2) + '_cube' + str(c) + '_psf'
 
         line_cube = cube_name + '.fits'
-        # beam_cube = beam_name + '_full.fits'   # Update to the expanded beam from
+        beam_cube = beam_name + '_full.fits'   # Update to the expanded beam from
         maskfits = '../' + mask_loc + taskid + '_HIcube2_image_sofiaFS_mask_bin' + str(b).zfill(2) + '_regrid.fits'
-        # mask2dfits = cube_name + '_sofia_mask-2d.fits'
-        # filteredfits = cube_name + '_filtered.fits'
-        #splinefits = cube_name + '_filtered_spline.fits'              DELETE THIS WHEN NECESSARY *******************************
         splinefits = cube_name + '_spline.fits'
-        # new_splinefits = cube_name + '_all_spline.fits'
-        # catalog_file = cube_name + '_sofiaFS_cat.txt'
 
         print(maskfits)
         if os.path.isfile(maskfits):
@@ -259,7 +233,7 @@ for b in beams:
                 sources = [str(s) for s in args.sources.split(',')]
                 mask_expr = '"(<mask_sofia>.eq.-1).or.(<mask_sofia>.eq.' + ').or.(<mask_sofia>.eq.'.join(sources) + ')"'
 
-            # If cleaning the filtered_spline cube, rather than original data: do some repair work.
+            # If cleaning the filtered_spline cube, rather than original data: do some repair work. DEPRECATED!
             if (not args.nospline) & ((not os.path.isfile(splinefits)) | args.overwrite):
                 # print("[CLEAN2] Creating a 'repaired' spline cube for Beam {:02}, Cube {}.".format(b, c))
                 print("[CLEAN2] Splinefit while avoiding sources for Beam {:02}, Cube {}.".format(b, c))
@@ -348,8 +322,6 @@ for b in beams:
             else:
                 print("\tNo spline fitted cube found.  Exiting!")
                 exit()
-                # f = pyfits.open(new_splinefits)                                               DELETE THIS WHEN NECESSARY *******************************
-                # print("[CLEAN2] Determining the statistics from the repaired Beam {:02}, Cube {}.".format(b, c))              DELETE THIS WHEN NECESSARY *******************************
             nchan = f[0].data.shape[0]
             mask = np.ones(nchan, dtype=bool)
             if c == 3:
@@ -360,14 +332,11 @@ for b in beams:
 
             # Output what exactly is being used to clean the data
             print("\t{}".format(maskfits))
-            # Edit mask cube to trick Miriad into using the whole volume.
-            # Is this necessary?
-            # m = pyfits.open(maskfits, mode='update')
-            # m[0].data[:, 0, 0] = -1
-            # m[0].data[:, -1, -1] = -1
-            # m[0].scale('int16')
-            # m.flush()
-            # m.close()
+            m = pyfits.open(maskfits)
+            # Get channels to clean:
+            chan_mask = np.sum(m[0].data, axis=(1, 2))
+            chan = np.where(chan_mask > 0)[0]
+            m.close()
 
             # Delete any pre-existing Miriad files.
             os.system('rm -rf model_* beam_* map_* image_* mask_* residual_*')
@@ -379,7 +348,6 @@ for b in beams:
             if args.nospline:
                 fits.in_ = line_cube
             else:
-                # fits.in_ = new_splinefits              DELETE THIS WHEN NECESSARY *******************************
                 fits.in_ = splinefits
             fits.out = 'map_00'
             fits.go()
@@ -391,7 +359,6 @@ for b in beams:
                     os.system('iget {}{}_AP_B0{:02}/HI_beam_cube{}.fits {}'.format(alta_dir, taskid, b, c, loc))
                 print("[CLEAN2] Expanding synthesized beam.")
                 trim_beam.main(beam_half, beam_cube, 1)
-            
             fits.in_ = beam_cube
             fits.out = 'beam_00'
             fits.go()
@@ -415,9 +382,7 @@ for b in beams:
                 dirty_cube = line_cube
                 outcube = line_cube[:-5]
             else:
-                # dirty_cube = new_splinefits              DELETE THIS WHEN NECESSARY *******************************
                 dirty_cube = splinefits
-                # outcube = line_cube[:-5] + '_rep'             DELETE THIS WHEN NECESSARY *******************************
                 outcube = splinefits[:-5]  # + '_rep'
 
             new_cleanfits = outcube + '_clean.fits'
@@ -443,14 +408,7 @@ for b in beams:
                 new_residualcube = pyfits.open(new_residualfits, mode='update')
                 new_residualcube_data = new_residualcube[0].data
 
-            # Get channels to clean explicitly!
-            chan = []
-            for s in sources:
-                zmin, zmax = np.int(catalog[catalog['id'] == np.int(s)]['z_min']), \
-                             np.int(catalog[catalog['id'] == np.int(s)]['z_max'])
-                chan = chan + [ch for ch in range(zmin, zmax+1, 1)]
-            chan = set(chan)
-            chan = list(chan)
+            # Initialize arrays based on cleaned channels
             bmaj_arr = np.zeros(len(chan))
             bmin_arr = np.zeros(len(chan))
             bpa_arr = np.zeros(len(chan))
@@ -585,15 +543,15 @@ for b in beams:
                 fits.out = outcube + '_clean_mask.fits'
                 fits.go()
 
-            catalog = ascii.read(catalog_file, header_start=18)
-            catalog['taskid'] = taskid.replace('/', '')   # np.int(taskid.replace('/', ''))
-            catalog['beam'] = b
-            catalog['cube'] = c
-            # Not sure that I've actually reordered anything.  This might be hold over that I gave up on:
-            catalog_reorder = catalog['name', 'id', 'x', 'y', 'z', 'x_min', 'x_max', 'y_min', 'y_max', 'z_min', 'z_max',
-                                      'n_pix', 'f_min', 'f_max', 'f_sum', 'rel', 'flag', 'rms', 'w20', 'w50',
-                                      'ell_maj', 'ell_min', 'ell_pa', 'ell3s_maj', 'ell3s_min', 'ell3s_pa', 'kin_pa',
-                                      "err_x", "err_y", "err_z", "err_f_sum", 'taskid', 'beam', 'cube']
+            # catalog = ascii.read(catalog_file, header_start=18)
+            # catalog['taskid'] = taskid.replace('/', '')
+            # catalog['beam'] = b
+            # catalog['cube'] = c
+            # # Not sure that I've actually reordered anything.  This might be hold over that I gave up on:
+            # catalog_reorder = catalog['name', 'id', 'x', 'y', 'z', 'x_min', 'x_max', 'y_min', 'y_max', 'z_min', 'z_max',
+            #                           'n_pix', 'f_min', 'f_max', 'f_sum', 'rel', 'flag', 'rms', 'w20', 'w50',
+            #                           'ell_maj', 'ell_min', 'ell_pa', 'ell3s_maj', 'ell3s_min', 'ell3s_pa', 'kin_pa',
+            #                           "err_x", "err_y", "err_z", "err_f_sum", 'taskid', 'beam', 'cube']
 
             # If everything was successful and didn't crash for a given beam/cube:
             # Copy SoFiA catalog for *cleaned* sources to [rep_]clean_cat.txt (Same for all cubes in a beam).
@@ -605,21 +563,16 @@ for b in beams:
                         obj.append(s)
                     objects.append(obj)
 
-            if args.nospline:
-                print("[CLEAN2] Writing/updating cleaned source catalog: clean_cat.txt")
-                write_catalog(objects, catParNames, catParUnits, catParFormt, header, outName=loc + 'clean_cat.txt')
-            else:
-                print("[CLEAN2] Writing/updating cleaned source catalog: rep_clean_cat.txt")
-                # write_catalog(objects, catParNames, catParUnits, catParFormt, header, outName=loc + 'rep_clean_cat.txt')
-                write_catalog(objects, catParNames, catParUnits, catParFormt, header, outName='clean_cat.txt')
+            # if args.nospline:
+            #     print("[CLEAN2] Writing/updating cleaned source catalog: clean_cat.txt")
+            #     write_catalog(objects, catParNames, catParUnits, catParFormt, header, outName=loc + 'clean_cat.txt')
+            # else:
+            #     print("[CLEAN2] Writing/updating cleaned source catalog: rep_clean_cat.txt")
+            #     write_catalog(objects, catParNames, catParUnits, catParFormt, header, outName='clean_cat.txt')
 
             # Clean up extra Miriad files
             os.system('rm -rf model_* beam_* map_* image_* mask_* residual_*')
         else:
             print("no mask?")
-
-    # Will probably need to do some sorting of the catalog if run clean multiple times.  This is a starting point:
-    # os.system('head -n +1 {} > temp'.format(clean_catalog))
-    # os.system('tail -n +2 {} | sort | uniq > temp2'.format(clean_catalog))
 
 print("[CLEAN2] Done.")
