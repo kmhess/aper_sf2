@@ -27,10 +27,13 @@ print('  Reprojecting mask {} to the WCS grid of cube {}.'.format(preGridMask, i
 with fits.open(incube) as cube:
     cubehead = cube[0].header
 
+beam = incube.split('_')[1][-2:]
+postGridMask = preGridMask.replace('.fits', '{}_regrid.fits'.format(beam))
+
 '''
 MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK AND REPROJECT
 '''
-with open('tmp.hdr', 'w') as file:
+with open('tmp' + str(beam) + '.hdr', 'w') as file:
     file.write('SIMPLE  =   T\n')
     file.write('BITPIX  =   -64\n')
     file.write('NAXIS   =   2\n')
@@ -47,9 +50,6 @@ with open('tmp.hdr', 'w') as file:
     file.write('EXTEND  =   T\n')
     file.write('EQUINOX =   2000.0\n')
     file.write('END\n')
-
-beam = incube.split('_')[1][-2:]
-postGridMask = preGridMask.replace('.fits', '{}_regrid.fits'.format(beam))
 
 if os.path.exists('{}'.format(postGridMask)):
     os.remove('{}'.format(postGridMask))
@@ -68,7 +68,7 @@ with fits.open('{}'.format(preGridMask)) as hdul:
         hdul.writeto('{}'.format(preGridMaskNew), overwrite=True)
         preGridMask = preGridMaskNew
 
-Run('mProjectCube {} {} tmp.hdr'.format(preGridMask, postGridMask))
+Run('mProjectCube {} {} tmp{}.hdr'.format(preGridMask, postGridMask, beam))
 
 if not os.path.exists('{}'.format(postGridMask)):
     raise IOError(
@@ -117,4 +117,4 @@ try:
 except:
     pass
 os.remove(postGridMask.replace('_regrid.fits', '_regrid_area.fits'))
-os.remove('tmp.hdr')
+os.remove('tmp' + str(beam) + '.hdr')
