@@ -59,7 +59,7 @@ def run2(i):
     global new_cleancube_data, new_modelcube_data, new_residualcube_data
 
     try:
-        for name in ['map_{:02}'.format(minc), 'beam_{:02}'.format(minc), 'mask_{:02}'.format(minc)]:
+        for name in ['map_{:02}_{:02}'.format(b, minc), 'beam_{:02}_{:02}'.format(b, minc), 'mask_{:02}_{:02}'.format(b, minc)]:
             imsub = lib.miriad('imsub')
             imsub.in_ = name
             imsub.out = name + "_" + str(chan[i]).zfill(4)
@@ -71,12 +71,12 @@ def run2(i):
 
     try:
         # print("[CLEAN2] Cleaning HI emission using SoFiA mask for Sources {}.".format(args.sources))
-        clean.map = 'map_{:02}_{:04}'.format(minc, chan[i])
-        clean.beam = 'beam_{:02}_{:04}'.format(minc, chan[i])
-        clean.out = 'model_{:02}_{:04}'.format(minc + 1, chan[i])
+        clean.map = 'map_{:02}_{:02}_{:04}'.format(b, minc, chan[i])
+        clean.beam = 'beam_{:02}_{:02}_{:04}'.format(b, minc, chan[i])
+        clean.out = 'model_{:02}_{:02}_{:04}'.format(b, minc + 1, chan[i])
         clean.cutoff = lineimagestats[2] * 0.5
         clean.niters = 10000
-        clean.region = '"mask(mask_{:02}_{:04}/)"'.format(minc, chan[i])
+        clean.region = '"mask(mask_{:02}_{:02}_{:04}/)"'.format(b, minc, chan[i])
         clean.go()
     except RuntimeError:
         print("\tProblems CLEANing data for channel {}.".format(chan[i]))
@@ -84,10 +84,10 @@ def run2(i):
 
     try:
         # print("[CLEAN2] Restoring line cube.")
-        restor.model = 'model_{:02}_{:04}'.format(minc + 1, chan[i])
-        restor.beam = 'beam_{:02}_{:04}'.format(minc, chan[i])
-        restor.map = 'map_{:02}_{:04}'.format(minc, chan[i])
-        restor.out = 'image_{:02}_{:04}'.format(minc + 1, chan[i])
+        restor.model = 'model_{:02}_{:02}_{:04}'.format(b, minc + 1, chan[i])
+        restor.beam = 'beam_{:02}_{:02}_{:04}'.format(b, minc, chan[i])
+        restor.map = 'map_{:02}_{:02}_{:04}'.format(b, minc, chan[i])
+        restor.out = 'image_{:02}_{:02}_{:04}'.format(b, minc + 1, chan[i])
         restor.mode = 'clean'
         restor.go()
     except RuntimeError:
@@ -95,13 +95,14 @@ def run2(i):
 
     try:
         # print("[CLEAN2] Making residual cube.")
-        out_array = ['image_{:02}_{:04}'.format(minc + 1, chan[i])]
+        out_array = ['image_{:02}_{:02}_{:04}'.format(b, minc + 1, chan[i])]
         if args.all:
             restor.mode = 'residual'  # Create the residual image
-            restor.out = 'residual_{:02}_{:04}'.format(minc + 1, chan[i])
+            restor.out = 'residual_{:02}_{:02}_{:04}'.format(b, minc + 1, chan[i])
             restor.go()
-            out_array = ['model_{:02}_{:04}'.format(minc + 1, chan[i]), 'image_{:02}_{:04}'.format(minc + 1, chan[i]),
-                         'residual_{:02}_{:04}'.format(minc + 1, chan[i])]
+            out_array = ['model_{:02}_{:02}_{:04}'.format(b, minc + 1, chan[i]),
+                         'image_{:02}_{:02}_{:04}'.format(b, minc + 1, chan[i]),
+                         'residual_{:02}_{:02}_{:04}'.format(b, minc + 1, chan[i])]
     except RuntimeError:
         print("\tProblems RESTORing data with RESIDUALS for channel {}.".format(chan[i]))
 
@@ -115,11 +116,10 @@ def run2(i):
         print("Problems writing data to FITS for channel {}. Check miriad files instead.".format(chan[i]))
 
     try:
-        new_cleancube_data[chan[i], :, :] = pyfits.getdata('image_{:02}_{:04}.fits'.format(minc + 1, chan[i]))
+        new_cleancube_data[chan[i], :, :] = pyfits.getdata('image_{:02}_{:02}_{:04}.fits'.format(b, minc + 1, chan[i]))
         if args.all:
-            # Not currently padding with zeros, sooo...maybe this is where clean issue is?
-            new_modelcube_data[chan[i], :, :] = pyfits.getdata('model_{:02}_{:04}.fits'.format(minc + 1, chan[i]))
-            new_residualcube_data[chan[i], :, :] = pyfits.getdata('residual_{:02}_{:04}.fits'.format(minc + 1, chan[i]))
+            new_modelcube_data[chan[i], :, :] = pyfits.getdata('model_{:02}_{:02}_{:04}.fits'.format(b, minc + 1, chan[i]))
+            new_residualcube_data[chan[i], :, :] = pyfits.getdata('residual_{:02}_{:02}_{:04}.fits'.format(b, minc + 1, chan[i]))
     except RuntimeError:
         print("Couldn't add some channel to new cube because of above errors. Continue to next.".format(chan[i]))
 
@@ -197,15 +197,17 @@ catParUnits = ("-", "-", "pix", "pix", "chan", "pix", "pix", "pix", "pix", "chan
 catParFormt = ("%12s", "%7i", "%10.3f", "%10.3f", "%10.3f", "%7i", "%7i", "%7i", "%7i", "%7i", "%7i", "%8i",
                "%10.7f", "%10.7f", "%12.6f", "%8.6f", "%7i", "%12.6f", "%10.3f", "%10.3f", "%10.3f", "%10.3f", "%10.3f",
                "%10.3f", "%10.3f", "%10.3f", "%10.3f", "%10.3f", "%10.3f", "%10.3f", "%12.6f", "%10s", "%7i", "%7i")  #changed taskid from %10i to %10s
+
 prepare = apercal.prepare()
+managefiles.director(prepare, 'ch', taskid)
 
 for b in beams:
-    loc = taskid + '/B0' + str(b).zfill(2) + '/'
-    loc = taskid + '/'
+    # loc = taskid + '/B0' + str(b).zfill(2) + '/'
+    # loc = taskid + '/'
     mask_loc = 'mos_' + taskid + '/'
-    print("\t{}".format(loc))
+    # print("\t{}".format(loc))
 
-    managefiles.director(prepare, 'ch', loc)
+    # managefiles.director(prepare, 'ch', loc)
 
     for c in cubes:
         cube_name = 'HI_B0' + str(b).zfill(2) + '_cube' + str(c) + '_image'
@@ -214,24 +216,24 @@ for b in beams:
         line_cube = cube_name + '.fits'
         beam_cube = beam_name + '_full.fits'   # Update to the expanded beam from
         maskfits = '../' + mask_loc + taskid + '_HIcube2_image_sofiaFS_mask_bin' + str(b).zfill(2) + '_regrid.fits'
-        splinefits = cube_name + '_spline.fits'
+        splinefits = cube_name[:-6] + '_spline.fits'
 
-        print(maskfits)
         if os.path.isfile(maskfits):
             # catalog = ascii.read(catalog_file, header_start=18)
             if args.sources == 'all':
-                mask_expr = '"(<mask_sofia>.eq.-1).or.(<mask_sofia>.ge.0.01)"'
+                mask_expr = '"(<mask_' + str(b).zfill(2) + '_sofia>.eq.-1).or.(<mask_' + str(b).zfill(2) + '_sofia>.ge.0.01)"'
                 # sources = [str(s + 1) for s in range(len(catalog))]
             # DEPRECATED:
             elif '-' in args.sources:
                 mask_range = args.sources.split('-')
                 sources = [str(s + int(mask_range[0])) for s in range(int(mask_range[1]) - int(mask_range[0]) + 1)]
-                mask_expr = '"(<mask_sofia>.eq.-1).or.((<mask_sofia>.ge.{}).and.(<mask_sofia>.le.{}))"'.format(
-                    mask_range[0],
-                    mask_range[-1])
+                mask_expr = '"(<mask_' + str(b).zfill(2) + '_sofia>.eq.-1).or.((<mask_' + str(b).zfill(2) + \
+                            '_sofia>.ge.{}).and.(<mask_' + str(b).zfill(2) + '_sofia>.le.{}))"'.format(mask_range[0],
+                                                                                                      mask_range[-1])
             else:
                 sources = [str(s) for s in args.sources.split(',')]
-                mask_expr = '"(<mask_sofia>.eq.-1).or.(<mask_sofia>.eq.' + ').or.(<mask_sofia>.eq.'.join(sources) + ')"'
+                mask_expr = '"(<mask_' + str(b).zfill(2) + '_sofia>.eq.-1).or.(<mask_' + str(b).zfill(2) + \
+                            '_sofia>.eq.' + ').or.(<mask_' + str(b).zfill(2) + '_sofia>.eq.'.join(sources) + ')"'
 
             # If cleaning the filtered_spline cube, rather than original data: do some repair work. DEPRECATED!
             if (not args.nospline) & ((not os.path.isfile(splinefits)) | args.overwrite):
@@ -252,7 +254,6 @@ for b in beams:
                 ################################################
                 # Parallelization of spline
                 xx, yy = range(new_splinecube_data.shape[1]), range(new_splinecube_data.shape[2])
-                print(new_splinecube_data.shape)
                 x, y = np.meshgrid(xx, yy)
                 x, y = x.ravel(), y.ravel()
                 ncases = len(x)
@@ -339,7 +340,8 @@ for b in beams:
             m.close()
 
             # Delete any pre-existing Miriad files.
-            os.system('rm -rf model_* beam_* map_* image_* mask_* residual_*')
+            os.system('rm -rf model_'+str(b).zfill(2)+'* beam_'+str(b).zfill(2)+'* map_'+str(b).zfill(2) +
+                      '* image_'+str(b).zfill(2)+'* mask_'+str(b).zfill(2)+'* residual_'+str(b).zfill(2)+'*')
 
             print("[CLEAN2] Reading in FITS files, making Miriad mask.")
 
@@ -349,28 +351,28 @@ for b in beams:
                 fits.in_ = line_cube
             else:
                 fits.in_ = splinefits
-            fits.out = 'map_00'
+            fits.out = 'map_' + str(b).zfill(2) + '_00'
             fits.go()
 
             if not os.path.isfile(beam_cube):
-                beam_half = loc + 'HI_beam_cube{}.fits'.format(c)
-                if not os.path.isfile(beam_half):
-                    print("[CLEAN2] Retrieving synthesized beam cube from ALTA.")
-                    os.system('iget {}{}_AP_B0{:02}/HI_beam_cube{}.fits {}'.format(alta_dir, taskid, b, c, loc))
+                # beam_half = loc + 'HI_beam_cube{}.fits'.format(c)
+                # if not os.path.isfile(beam_half):
+                #     print("[CLEAN2] Retrieving synthesized beam cube from ALTA.")
+                #     os.system('iget {}{}_AP_B0{:02}/HI_beam_cube{}.fits {}'.format(alta_dir, taskid, b, c, loc))
                 print("[CLEAN2] Expanding synthesized beam.")
-                trim_beam.main(beam_half, beam_cube, 1)
+                trim_beam.main(beam_name+'.fits', beam_cube, 1)
             fits.in_ = beam_cube
-            fits.out = 'beam_00'
+            fits.out = 'beam_'+str(b).zfill(2)+'_00'
             fits.go()
 
             # Work with mask_sofia in current directory...otherwise worried about miriad character length for mask_expr
             fits.in_ = maskfits
-            fits.out = 'mask_sofia'
+            fits.out = 'mask_'+str(b).zfill(2)+'_sofia'
             fits.go()
 
             maths = lib.miriad('maths')
-            maths.out = 'mask_00'
-            maths.exp = '"<mask_sofia>"'
+            maths.out = 'mask_'+str(b).zfill(2)+'_00'
+            maths.exp = '"<mask_'+str(b).zfill(2)+'_sofia>"'
             maths.mask = mask_expr
             maths.go()
 
@@ -385,7 +387,7 @@ for b in beams:
                 dirty_cube = splinefits
                 outcube = splinefits[:-5]  # + '_rep'
 
-            new_cleanfits = outcube + '_clean.fits'
+            new_cleanfits = outcube + '_clean_image.fits'
             os.system('cp {} {}'.format(dirty_cube, new_cleanfits))
             print("\t{}".format(new_cleanfits))
             new_cleancube = pyfits.open(new_cleanfits, mode='update')
@@ -534,15 +536,15 @@ for b in beams:
             new_cleancube.flush()
             new_cleancube.close()
 
-            # Output sofia only mask????
-            print("[CLEAN2] Writing mask with only cleaned sources")
-            os.system('rm -rf {}_clean_mask.fits'.format(outcube))
-            fits.op = 'xyout'
-            fits.in_ = 'mask_' + str(minc).zfill(2)
-            if not args.nospline:
-                fits.out = outcube + '_clean_mask.fits'
-                fits.go()
-
+            # Don't need to output sofia only mask, because same info is in regridded mask.
+            # print("[CLEAN2] Writing mask with only cleaned sources")
+            # os.system('rm -rf {}_clean_mask.fits'.format(outcube))
+            # fits.op = 'xyout'
+            # fits.in_ = 'mask_' + str(minc).zfill(2)
+            # if not args.nospline:
+            #     fits.out = outcube + '_clean_mask.fits'
+            #     fits.go()
+            #
             # catalog = ascii.read(catalog_file, header_start=18)
             # catalog['taskid'] = taskid.replace('/', '')
             # catalog['beam'] = b
@@ -552,17 +554,17 @@ for b in beams:
             #                           'n_pix', 'f_min', 'f_max', 'f_sum', 'rel', 'flag', 'rms', 'w20', 'w50',
             #                           'ell_maj', 'ell_min', 'ell_pa', 'ell3s_maj', 'ell3s_min', 'ell3s_pa', 'kin_pa',
             #                           "err_x", "err_y", "err_z", "err_f_sum", 'taskid', 'beam', 'cube']
-
+            #
             # If everything was successful and didn't crash for a given beam/cube:
             # Copy SoFiA catalog for *cleaned* sources to [rep_]clean_cat.txt (Same for all cubes in a beam).
-            objects = []
-            for source in catalog_reorder:
-                if str(source['id']) in sources:
-                    obj = []
-                    for s in source:
-                        obj.append(s)
-                    objects.append(obj)
-
+            # objects = []
+            # for source in catalog_reorder:
+            #     if str(source['id']) in sources:
+            #         obj = []
+            #         for s in source:
+            #             obj.append(s)
+            #         objects.append(obj)
+            #
             # if args.nospline:
             #     print("[CLEAN2] Writing/updating cleaned source catalog: clean_cat.txt")
             #     write_catalog(objects, catParNames, catParUnits, catParFormt, header, outName=loc + 'clean_cat.txt')
@@ -571,7 +573,9 @@ for b in beams:
             #     write_catalog(objects, catParNames, catParUnits, catParFormt, header, outName='clean_cat.txt')
 
             # Clean up extra Miriad files
-            os.system('rm -rf model_* beam_* map_* image_* mask_* residual_*')
+            os.system('rm -rf model_'+str(b).zfill(2)+'* beam_'+str(b).zfill(2)+'* map_'+str(b).zfill(2) +
+                      '* image_'+str(b).zfill(2)+'* mask_'+str(b).zfill(2)+'* residual_'+str(b).zfill(2)+'*')
+            os.system('rm -rf ' + beam_cube)
         else:
             print("no mask?")
 
