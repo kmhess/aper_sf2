@@ -6,7 +6,6 @@ from modules.natural_cubic_spline import fspline
 from src import trim_beam
 
 from argparse import ArgumentParser, RawTextHelpFormatter
-# from astropy.io import ascii
 import astropy.io.fits as pyfits
 import numpy as np
 
@@ -16,8 +15,6 @@ from tqdm.auto import trange
 from apercal.libs import lib
 from apercal.subs import managefiles
 import apercal
-
-# from modules.functions import write_catalog
 
 
 def worker(inQueue, outQueue):
@@ -214,42 +211,26 @@ for b in beams:
         beam_name = 'HI_B0' + str(b).zfill(2) + '_cube' + str(c) + '_psf'
 
         line_cube = cube_name + '.fits'
-        beam_cube = beam_name + '_full.fits'   # Update to the expanded beam from
-        maskfits = '../' + mask_loc + taskid + '_HIcube2_image_sofiaFS_mask_bin' + str(b).zfill(2) + '_regrid.fits'
+        beam_cube = beam_name + '_full.fits'   # Update to the expanded beam (deleted later to save space)
+        maskfits = '/mnt/data/' + mask_loc + taskid + '_HIcube2_image_sofiaFS_mask_bin' + str(b).zfill(2) + '_regrid.fits'
         splinefits = cube_name[:-6] + '_spline.fits'
 
         if os.path.isfile(maskfits):
-            # catalog = ascii.read(catalog_file, header_start=18)
-            if args.sources == 'all':
-                mask_expr = '"(<mask_' + str(b).zfill(2) + '_sofia>.eq.-1).or.(<mask_' + str(b).zfill(2) + '_sofia>.ge.0.01)"'
-                # sources = [str(s + 1) for s in range(len(catalog))]
-            # DEPRECATED:
-            elif '-' in args.sources:
-                mask_range = args.sources.split('-')
-                sources = [str(s + int(mask_range[0])) for s in range(int(mask_range[1]) - int(mask_range[0]) + 1)]
-                mask_expr = '"(<mask_' + str(b).zfill(2) + '_sofia>.eq.-1).or.((<mask_' + str(b).zfill(2) + \
-                            '_sofia>.ge.{}).and.(<mask_' + str(b).zfill(2) + '_sofia>.le.{}))"'.format(mask_range[0],
-                                                                                                      mask_range[-1])
-            else:
-                sources = [str(s) for s in args.sources.split(',')]
-                mask_expr = '"(<mask_' + str(b).zfill(2) + '_sofia>.eq.-1).or.(<mask_' + str(b).zfill(2) + \
-                            '_sofia>.eq.' + ').or.(<mask_' + str(b).zfill(2) + '_sofia>.eq.'.join(sources) + ')"'
 
-            # If cleaning the filtered_spline cube, rather than original data: do some repair work. DEPRECATED!
+            mask_expr = '"(<mask_' + str(b).zfill(2) + '_sofia>.eq.-1).or.(<mask_' + str(b).zfill(2) + '_sofia>.ge.0.01)"'
+
             if (not args.nospline) & ((not os.path.isfile(splinefits)) | args.overwrite):
-                # print("[CLEAN2] Creating a 'repaired' spline cube for Beam {:02}, Cube {}.".format(b, c))
+
                 print("[CLEAN2] Splinefit while avoiding sources for Beam {:02}, Cube {}.".format(b, c))
                 os.system('cp {} {}'.format(line_cube, splinefits))
                 print("\t{}".format(splinefits))
                 new_splinecube = pyfits.open(splinefits, mode='update')
                 maskcube = pyfits.open(maskfits)
-                # mask2d = pyfits.getdata(mask2dfits)
                 orig = pyfits.open(line_cube)
                 orig_data = orig[0].data
                 new_splinecube_data = new_splinecube[0].data
                 new_splinecube_data[maskcube[0].data > 0] = 0.0
                 maskcube.close()
-                # filtered_pixels = np.copy(new_splinecube[0].data[0, :, :])
 
                 ################################################
                 # Parallelization of spline
@@ -355,10 +336,6 @@ for b in beams:
             fits.go()
 
             if not os.path.isfile(beam_cube):
-                # beam_half = loc + 'HI_beam_cube{}.fits'.format(c)
-                # if not os.path.isfile(beam_half):
-                #     print("[CLEAN2] Retrieving synthesized beam cube from ALTA.")
-                #     os.system('iget {}{}_AP_B0{:02}/HI_beam_cube{}.fits {}'.format(alta_dir, taskid, b, c, loc))
                 print("[CLEAN2] Expanding synthesized beam.")
                 trim_beam.main(beam_name+'.fits', beam_cube, 1)
             fits.in_ = beam_cube
@@ -544,33 +521,6 @@ for b in beams:
             # if not args.nospline:
             #     fits.out = outcube + '_clean_mask.fits'
             #     fits.go()
-            #
-            # catalog = ascii.read(catalog_file, header_start=18)
-            # catalog['taskid'] = taskid.replace('/', '')
-            # catalog['beam'] = b
-            # catalog['cube'] = c
-            # # Not sure that I've actually reordered anything.  This might be hold over that I gave up on:
-            # catalog_reorder = catalog['name', 'id', 'x', 'y', 'z', 'x_min', 'x_max', 'y_min', 'y_max', 'z_min', 'z_max',
-            #                           'n_pix', 'f_min', 'f_max', 'f_sum', 'rel', 'flag', 'rms', 'w20', 'w50',
-            #                           'ell_maj', 'ell_min', 'ell_pa', 'ell3s_maj', 'ell3s_min', 'ell3s_pa', 'kin_pa',
-            #                           "err_x", "err_y", "err_z", "err_f_sum", 'taskid', 'beam', 'cube']
-            #
-            # If everything was successful and didn't crash for a given beam/cube:
-            # Copy SoFiA catalog for *cleaned* sources to [rep_]clean_cat.txt (Same for all cubes in a beam).
-            # objects = []
-            # for source in catalog_reorder:
-            #     if str(source['id']) in sources:
-            #         obj = []
-            #         for s in source:
-            #             obj.append(s)
-            #         objects.append(obj)
-            #
-            # if args.nospline:
-            #     print("[CLEAN2] Writing/updating cleaned source catalog: clean_cat.txt")
-            #     write_catalog(objects, catParNames, catParUnits, catParFormt, header, outName=loc + 'clean_cat.txt')
-            # else:
-            #     print("[CLEAN2] Writing/updating cleaned source catalog: rep_clean_cat.txt")
-            #     write_catalog(objects, catParNames, catParUnits, catParFormt, header, outName='clean_cat.txt')
 
             # Clean up extra Miriad files
             os.system('rm -rf model_'+str(b).zfill(2)+'* beam_'+str(b).zfill(2)+'* map_'+str(b).zfill(2) +
