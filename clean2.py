@@ -461,8 +461,8 @@ for b in beams:
                 print("[CLEAN2] Updating history of reassembled model, residual, clean cubes")
                 for i in range(len(chan)):
                     if os.path.isfile('residual_{:02}_{:04}.fits'.format(minc + 1, chan[i])):
-                        residual_chan_hdr = pyfits.getheader('residual_{:02}_{:04}.fits'.format(minc + 1, chan[i]))
-                        model_chan_hdr = pyfits.getheader('model_{:02}_{:04}.fits'.format(minc + 1, chan[i]))
+                        residual_chan_hdr = pyfits.getheader('residual_{:02}_{:02}_{:04}.fits'.format(b, minc + 1, chan[i]))
+                        model_chan_hdr = pyfits.getheader('model_{:02}_{:02}_{:04}.fits'.format(b, minc + 1, chan[i]))
                         for hist in residual_chan_hdr[-35:]['HISTORY']:
                             new_residualcube[0].header['HISTORY'] = hist
                         for hist in model_chan_hdr[-26:]['HISTORY']:
@@ -484,8 +484,8 @@ for b in beams:
                 print("[CLEAN2] Updating history of reassembled clean cube")
 
             for i in range(len(chan)):
-                if os.path.isfile('image_{:02}_{:04}.fits'.format(minc + 1, chan[i])):
-                    clean_chan_hdr = pyfits.getheader('image_{:02}_{:04}.fits'.format(minc + 1, chan[i]))
+                if os.path.isfile('image_{:02}_{:02}_{:04}.fits'.format(b, minc + 1, chan[i])):
+                    clean_chan_hdr = pyfits.getheader('image_{:02}_{:02}_{:04}.fits'.format(b, minc + 1, chan[i]))
                     for hist in clean_chan_hdr[-35:]['HISTORY']:  # Determined through trial and error
                         new_cleancube[0].header['HISTORY'] = hist
                     bmaj_arr[i] = clean_chan_hdr['BMAJ']
