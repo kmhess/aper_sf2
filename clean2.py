@@ -495,19 +495,22 @@ for b in beams:
 
             print("[CLEAN2] Adding median beam properties to primary header")
             med_bmaj, med_bmin, med_bpa = np.median(bmaj_arr), np.median(bmin_arr), np.median(bpa_arr)
-            new_cleancube[0].header.set('BMAJ', med_bmaj, 'median clean beam bmaj')
-            new_cleancube[0].header.set('BMIN', med_bmin, 'median clean beam bmin')
-            new_cleancube[0].header.set('BPA', med_bpa, 'median clean beam pa')
+            if len(bmaj_arr) > 0:
+                new_cleancube[0].header.set('BMAJ', med_bmaj, 'median clean beam bmaj')
+                new_cleancube[0].header.set('BMIN', med_bmin, 'median clean beam bmin')
+                new_cleancube[0].header.set('BPA', med_bpa, 'median clean beam pa')
 
-            print("[CLEAN2] Adding channel clean beam properties to BEAMS extension table")
-            col1 = pyfits.Column(name='BMAJ', format='1E', unit='deg', array=bmaj_arr)
-            col2 = pyfits.Column(name='BMIN', format='1E', unit='deg', array=bmin_arr)
-            col3 = pyfits.Column(name='BPA', format='1E', unit='deg', array=bpa_arr)
-            col4 = pyfits.Column(name='CHAN', format='1J', array=chan)
-            beam_hdu = pyfits.BinTableHDU.from_columns([col1, col2, col3, col4])
-            beam_hdu.name = 'BEAMS'
-            beam_hdu.header.comments['NAXIS2'] = 'number of channels'
-            new_cleancube.append(beam_hdu)
+                print("[CLEAN2] Adding channel clean beam properties to BEAMS extension table")
+                col1 = pyfits.Column(name='BMAJ', format='1E', unit='deg', array=bmaj_arr)
+                col2 = pyfits.Column(name='BMIN', format='1E', unit='deg', array=bmin_arr)
+                col3 = pyfits.Column(name='BPA', format='1E', unit='deg', array=bpa_arr)
+                col4 = pyfits.Column(name='CHAN', format='1J', array=chan)
+                beam_hdu = pyfits.BinTableHDU.from_columns([col1, col2, col3, col4])
+                beam_hdu.name = 'BEAMS'
+                beam_hdu.header.comments['NAXIS2'] = 'number of channels'
+                new_cleancube.append(beam_hdu)
+            else:
+                print("[CLEAN2] No channels cleaned; no beam info being written to header.")
 
             print(" - Saving the new clean file")
             new_cleancube.flush()
