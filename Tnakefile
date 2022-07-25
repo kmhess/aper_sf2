@@ -1,0 +1,87 @@
+# https://stackoverflow.com/questions/66466082/how-do-i-write-a-snakemake-input-when-not-all-jobs-successfully-output-files-fro
+
+import os
+FIELD = "S1021+5815"
+
+beams, = glob_wildcards(FIELD+"/HI_B0{xx}_cube2_image.fits")
+
+wildcard_constraints:
+    beam="\d+"
+
+rule all:
+    input:
+        expand(FIELD + "/HI_B0{beam}.txt", beam=beams)
+
+rule a:
+    input:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube2_image_sofiaFS_mask.fits"
+    output:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube2_image_sofiaFS_mask_bin.fits"
+    shell:
+        "python3 /mnt/scratch/stuff/aper_sf2/src/binary_mask.py -t "+FIELD+" -c 2"
+
+rule b:
+    input:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube2_image_sofiaFS_mask_bin.fits"
+    output:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube2_image_sofiaFS_mask_bin_dil.fits"
+    shell:
+        "python3 /mnt/scratch/stuff/aper_sf2/src/dilate_binmask.py -t "+FIELD+" -c 2"
+
+rule c:
+    input:
+        FIELD+"/HI_B0{bm}_cube2_image.fits",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube2_image_sofiaFS_mask_bin_dil.fits"
+    output:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube2_image_sofiaFS_mask_bin_dil{bm}_regrid.fits"
+    threads:
+        5
+    shell:
+        "python3 /mnt/scratch/stuff/aper_sf2/src/regridmask.py {input[0]} {input[1]}"
+
+# Try moving this to Unakefile so that I don't have to manually delete the pb files & they are only created when they're needed.
+# Adjust input to other programs (checkpoint f) below as needed.
+rule d:
+    input:
+        FIELD+"/HI_B0{bm}_cube2_image.fits",
+        "/mnt/scratch/apertif/cbeams/{bm}_gp_avg_orig.fits"
+    output:
+        FIELD+"/HI_B0{bm}_cube2_spline_clean_pb.fits"
+    run:
+        shell("python3 /mnt/scratch/stuff/aper_cube_stack/modules/regrid_aperpb.py -t {input[0]} -b {wildcards.bm} -p /mnt/scratch/apertif/cbeams/")
+        shell("mv "+FIELD+"/HI_B0{wildcards.bm}_cube2_pb.fits {output}")
+
+rule e:
+    input:
+        FIELD+"/HI_B0{bm}_cube2_image.fits"
+    output:
+        FIELD+"/HI_B0{bm}_cube2_psf.fits"
+    threads:
+        #2
+        4
+    shell:
+        "python3 /mnt/scratch/stuff/aper_cube_stack/psf_stack.py -f "+FIELD+" -b {wildcards.bm}"
+
+#  NEEDS TO BE IN A CONTAINER!!
+checkpoint f:
+# rule f:
+    input:
+        FIELD+"/HI_B0{beam}_cube2_image.fits",
+        FIELD+"/HI_B0{beam}_cube2_psf.fits",
+        FIELD + "/HI_B0{beam}_cube2_spline_clean_pb.fits",  # not essential to this step, but prepares rest by-hand
+        "mos_"+FIELD+"/"+FIELD+"_HIcube2_image_sofiaFS_mask_bin_dil{beam}_regrid.fits"
+    output:
+        FIELD + "/HI_B0{beam}.txt"
+        # protected(FIELD+"/HI_B0{beam}_cube2_spline.fits"),
+        # protected(FIELD+"/HI_B0{beam}_cube2_spline_clean_image.fits")
+    singularity:
+        "/mnt/software/containers/apercal.sif"
+    threads:
+        11
+    shell:
+        "touch {output}"
+        # "python -m pip install sklearn; "
+        # "pip show numpy; "
+        # "pip uninstall numpy; "
+        # "pip show numpy; "
+        # "python /mnt/scratch/stuff/aper_sf2/clean2.py -t "+FIELD+" -c 2 -b {wildcards.beam} -j 9"
