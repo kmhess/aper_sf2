@@ -1,0 +1,91 @@
+# https://stackoverflow.com/questions/66466082/how-do-i-write-a-snakemake-input-when-not-all-jobs-successfully-output-files-fro
+
+import os
+import glob
+FIELD = "S1021+5815"
+
+beams, = glob_wildcards(FIELD+"/HI_B0{xx}_cube2_spline_clean_image.fits")
+
+wildcard_constraints:
+    beams="\d+"
+
+rule all:
+    input:
+        "mos_"+FIELD+"/"+FIELD+"_beams.png"
+
+# Try for the next round so I don't have to manually delete the pb.fits files
+# rule d:
+#     input:
+#         FIELD+"/HI_B0{bm}_cube2_image.fits",
+#         "/mnt/scratch/apertif/cbeams/{bm}_gp_avg_orig.fits"
+#     output:
+#         temp(FIELD+"/HI_B0{bm}_cube2_spline_clean_pb.fits")
+#         FIELD+"/bp.txt"
+#     run:
+#         shell("python3 /mnt/scratch/stuff/aper_cube_stack/modules/regrid_aperpb.py -t {input[0]} -b {wildcards.bm} -p /mnt/scratch/apertif/cbeams/")
+#         shell("mv "+FIELD+"/HI_B0{wildcards.bm}_cube2_pb.fits {output}")
+#         shell("touch {output[1]}")
+
+def aggregate_input(wildcards):
+    found_files = expand(FIELD+"/HI_B0{xx}_cube2_spline_clean_image.fits", xx=beams)
+    return found_files
+
+rule aggregate_mosaic2:
+    input:
+        pb = aggregate_input,
+        # FIELD+"/bp.txt"
+    output:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image.fits",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image.hdr",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_noise.fits",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_weights.fits",
+        temp("mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image_fields"),
+        temp("mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image_fields.tbl"),
+        temp("mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image_fields_regrid"),
+        temp("mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image_fields_regrid.tbl"),
+        temp("mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_beams_regrid"),
+        temp("mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_beams_regrid.tbl"),
+    run:
+        input = list(input)
+        mos_params = " ".join([i.split("/")[1] for i in input if "spline_clean_image" in i])
+        os.system('mosaic-queen -mc 0.1 -n '+FIELD+'_HIcube2_clean -i '+FIELD+' -o mos_'+FIELD+' -t '+mos_params+' -r')
+        os.system('rm -rf mos_'+FIELD+'/*imageR*')
+        os.system('rm -rf mos_'+FIELD+'/*pbR*')
+
+rule h:
+    input:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image.fits",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube2_image_sofiaFS_mask_bin_dil.fits"
+    output:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image_cat.txt",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image_cat.xml",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image_mask-2d.fits",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image_mask.fits"
+    shell:
+        "/usr/bin/sofia ../scratch/stuff/aper_sf2/sofia_final_template.par input.data={input[0]} input.mask={input[1]}"
+
+rule i:
+    input:
+        "mos_" + FIELD + "/" + FIELD + "_HIcube2_clean_image_cat.xml"
+    output:
+        "mos_"+FIELD+"/"+"sip.txt"
+    shell:
+        "sofia_image_pipeline -c {input[0]} -s panstarrs -m; "
+        "touch mos_"+FIELD+"/"+"sip.txt"
+
+rule g:
+    input:
+        "mos_"+FIELD+"/"+"sip.txt"
+    output:
+        "mos_"+FIELD+"/"+"sip_edit.txt"
+    shell:
+        "python3 ../scratch/stuff/aper_sf2/src/edit_sip_images.py -t "+FIELD+" -c 2; "
+        "touch mos_"+FIELD+"/"+"sip_edit.txt"
+
+rule k:
+    input:
+        "mos_"+FIELD+"/"+"sip.txt"
+    output:
+        "mos_"+FIELD+"/"+FIELD+"_beams.png"
+    shell:
+        "python3 ../scratch/stuff/aper_sf2/src/plot_beams.py -t "+FIELD+" -c 2"
