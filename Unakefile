@@ -13,19 +13,6 @@ rule all:
     input:
         "mos_"+FIELD+"/"+FIELD+"_beams.png"
 
-# Try for the next round so I don't have to manually delete the pb.fits files
-# rule d:
-#     input:
-#         FIELD+"/HI_B0{bm}_cube2_image.fits",
-#         "/mnt/scratch/apertif/cbeams/{bm}_gp_avg_orig.fits"
-#     output:
-#         temp(FIELD+"/HI_B0{bm}_cube2_spline_clean_pb.fits")
-#         FIELD+"/bp.txt"
-#     run:
-#         shell("python3 /mnt/scratch/stuff/aper_cube_stack/modules/regrid_aperpb.py -t {input[0]} -b {wildcards.bm} -p /mnt/scratch/apertif/cbeams/")
-#         shell("mv "+FIELD+"/HI_B0{wildcards.bm}_cube2_pb.fits {output}")
-#         shell("touch {output[1]}")
-
 def aggregate_input(wildcards):
     found_files = expand(FIELD+"/HI_B0{xx}_cube2_spline_clean_image.fits", xx=beams)
     return found_files
@@ -33,7 +20,6 @@ def aggregate_input(wildcards):
 rule aggregate_mosaic2:
     input:
         pb = aggregate_input,
-        # FIELD+"/bp.txt"
     output:
         "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image.fits",
         "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image.hdr",
@@ -45,6 +31,10 @@ rule aggregate_mosaic2:
         temp("mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image_fields_regrid.tbl"),
         temp("mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_beams_regrid"),
         temp("mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_beams_regrid.tbl"),
+        # temp("mos_"+FIELD+"/HI_B0{beam}_cube2_spline_clean_imageR.fits"),
+        # temp("mos_"+FIELD+"/HI_B0{beam}_cube2_spline_clean_imageR_area.fits"),
+        # temp("mos_"+FIELD+"/HI_B0{beam}_cube2_spline_clean_pbR.fits"),
+        # temp("mos_"+FIELD+"/HI_B0{beam}_cube2_spline_clean_pbR_area.fits")
     run:
         input = list(input)
         mos_params = " ".join([i.split("/")[1] for i in input if "spline_clean_image" in i])
@@ -70,7 +60,7 @@ rule i:
     output:
         "mos_"+FIELD+"/"+"sip.txt"
     shell:
-        "sofia_image_pipeline -c {input[0]} -s panstarrs -m; "
+        "sofia_image_pipeline -c {input[0]} -s panstarrs 'DSS2 Blue' 'GALEX Near UV' -i 5 -m; "
         "touch mos_"+FIELD+"/"+"sip.txt"
 
 rule g:
@@ -84,7 +74,7 @@ rule g:
 
 rule k:
     input:
-        "mos_"+FIELD+"/"+"sip.txt"
+        "mos_"+FIELD+"/"+"sip_edit.txt"
     output:
         "mos_"+FIELD+"/"+FIELD+"_beams.png"
     shell:
