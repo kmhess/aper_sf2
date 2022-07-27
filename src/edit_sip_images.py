@@ -94,11 +94,11 @@ for c in cubes:
             font = 'DejaVuSans.ttf'
             I1.text((0.051*combo_im.size[0], 0.037*combo_im.size[1]), "!", font=ImageFont.truetype(font=font, size=48),
                     fill=(255, 0, 0))
-            I1.text((0.280*combo_im.size[0], 55*combo_im.size[1]), "!", font=ImageFont.truetype(font=font, size=48),
+            I1.text((0.280*combo_im.size[0], 0.037*combo_im.size[1]), "!", font=ImageFont.truetype(font=font, size=48),
                     fill=(255, 0, 0))
-            I1.text((0.539*combo_im.size[0], 55*combo_im.size[1]), "!", font=ImageFont.truetype(font=font, size=48),
+            I1.text((0.539*combo_im.size[0], 0.037*combo_im.size[1]), "!", font=ImageFont.truetype(font=font, size=48),
                     fill=(255, 0, 0))
-            I1.text((0.791*combo_im.size[0], 55*combo_im.size[1]), "!", font=ImageFont.truetype(font=font, size=48),
+            I1.text((0.791*combo_im.size[0], 0.037*combo_im.size[1]), "!", font=ImageFont.truetype(font=font, size=48),
                     fill=(255, 0, 0))
 
             combo_im.save(combo_im_name)
