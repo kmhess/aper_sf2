@@ -2,7 +2,26 @@
 
 import os
 import glob
-FIELD = "S1021+5815"
+#FIELD = "S2207+4114"
+#FIELD = "S1629+5324"
+#FIELD = "S1025+5550"
+#FIELD = "S1401+3130"
+#FIELD = "S1402+3622"
+#FIELD = "S1408+3356"
+#FIELD = "S1414+3130"
+#FIELD = "S1318+5550"
+#FIELD = "S1021+5815"
+#FIELD = "S0037+3130"
+#FIELD = "S0221+3130"
+#FIELD = "S0221+3356"
+#FIELD = "S1308+5324"
+#FIELD = "S1435+4832"
+#FIELD = "S1435+3356"
+#FIELD = "S1326+5324"
+#FIELD = "S1432+3848"
+
+configfile: "config.yaml"
+FIELD = config['FIELD']
 
 beams, = glob_wildcards(FIELD+"/HI_B0{xx}_cube2_spline_clean_image.fits")
 
@@ -56,25 +75,38 @@ rule h:
 
 rule i:
     input:
-        "mos_" + FIELD + "/" + FIELD + "_HIcube2_clean_image_cat.xml"
+        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image.fits",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image_cat.xml"
     output:
-        "mos_"+FIELD+"/"+"sip.txt"
+        "mos_"+FIELD+"/specfull.txt"
+    shell:
+        "python3 ../scratch/stuff/aper_sf2/src/get_specfull.py -t "+FIELD+" -c 2; "
+        "touch mos_"+FIELD+"/"+"specfull.txt"
+
+rule j:
+    input:
+        "mos_"+FIELD+"/specfull.txt",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image_cat.xml",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image.fits"
+    output:
+        "mos_"+FIELD+"/sip.txt"
     shell:
         "sofia_image_pipeline -c {input[0]} -s panstarrs 'DSS2 Blue' 'GALEX Near UV' -i 5 -m; "
+        #"sofia_image_pipeline -c {input[0]} -s 'DSS2 Blue' 'GALEX Near UV' -i 5 -m; "
         "touch mos_"+FIELD+"/"+"sip.txt"
 
-rule g:
+rule k:
     input:
-        "mos_"+FIELD+"/"+"sip.txt"
+        "mos_"+FIELD+"/sip.txt"
     output:
-        "mos_"+FIELD+"/"+"sip_edit.txt"
+        "mos_"+FIELD+"/sip_edit.txt"
     shell:
         "python3 ../scratch/stuff/aper_sf2/src/edit_sip_images.py -t "+FIELD+" -c 2; "
         "touch mos_"+FIELD+"/"+"sip_edit.txt"
 
-rule k:
+rule l:
     input:
-        "mos_"+FIELD+"/"+"sip_edit.txt"
+        "mos_"+FIELD+"/sip_edit.txt"
     output:
         "mos_"+FIELD+"/"+FIELD+"_beams.png"
     shell:

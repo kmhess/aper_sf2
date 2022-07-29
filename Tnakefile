@@ -1,7 +1,28 @@
 # https://stackoverflow.com/questions/66466082/how-do-i-write-a-snakemake-input-when-not-all-jobs-successfully-output-files-fro
 
 import os
-FIELD = "S1021+5815"
+#FIELD = "S2207+4114"
+#FIELD = "S1629+5324"
+#FIELD = "S1025+5550"
+#FIELD = "S1401+3130"
+#FIELD = "S1402+3622"
+#FIELD = "S1408+3356"
+#FIELD = "S1414+3130"
+#FIELD = "S1318+5550"
+#FIELD = "S1021+5815"
+#FIELD = "S0037+3130"
+#FIELD = "S0221+3130"
+#FIELD = "S0221+3356"
+#FIELD = "S1308+5324"
+#FIELD = "S1317+5058"
+#FIELD = "S1326+5324"
+#FIELD = "S1435+3356"
+#FIELD = "S1435+4832"
+#FIELD = "S1452+4832"
+#FIELD = "S1432+3848"
+
+configfile: "config.yaml"
+FIELD = config['FIELD']
 
 beams, = glob_wildcards(FIELD+"/HI_B0{xx}_cube2_image.fits")
 
@@ -39,8 +60,6 @@ rule c:
     shell:
         "python3 /mnt/scratch/stuff/aper_sf2/src/regridmask.py {input[0]} {input[1]}"
 
-# Try moving this to Unakefile so that I don't have to manually delete the pb files & they are only created when they're needed.
-# Adjust input to other programs (checkpoint f) below as needed.
 rule d:
     input:
         FIELD+"/HI_B0{bm}_cube2_image.fits",
@@ -59,6 +78,7 @@ rule e:
     threads:
         #2
         4
+        #6
     shell:
         "python3 /mnt/scratch/stuff/aper_cube_stack/psf_stack.py -f "+FIELD+" -b {wildcards.bm}"
 
