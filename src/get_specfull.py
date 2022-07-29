@@ -1,4 +1,6 @@
 import os
+import random
+import string
 
 from argparse import ArgumentParser, RawTextHelpFormatter
 from astropy.io import fits, ascii
@@ -41,7 +43,6 @@ mos_loc = 'mos_' + taskid + '/'
 for c in cubes:
     filename = taskid + '_HIcube' + str(c) + '_clean_image'
     mosaic = fits.open(mos_loc + filename + '.fits')
-    mosaic2d = fits.open(mos_loc + filename + '_mask-2d.fits')
     wcs_mos = WCS(mosaic[0].header).celestial
     channels = np.asarray(range(mosaic[0].data.shape[0]))
     frequency = chan2freq(channels, mosaic[0].header)
@@ -73,7 +74,8 @@ for c in cubes:
         spectrum = np.nansum(subcube[:, mask2d != 0], axis=1)
         n_pix = 0 * channels + np.sum(mask2d != 0)
 
-        with open('temp.txt', 'w') as f:
+        code = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
+        with open(f'temp{code}.txt', 'w') as f:
             f.write("# Integrated source spectrum with noise\n")
             f.write("# Creator: SoFiA-image-pipeline.py\n")  # %s\n#\n" % sofia_version_full)
             f.write("# \n")
@@ -83,10 +85,10 @@ for c in cubes:
             f.write("# for every point.\n")
             f.write("# \n")
 
-            ascii.write([channels, frequency, spectrum, n_pix], 'temp2.txt', format='fixed_width_two_line',
+            ascii.write([channels, frequency, spectrum, n_pix], f'temp2{code}.txt', format='fixed_width_two_line',
                         names=['chan', 'freq', 'f_sum', 'n_pix'])
 
-        os.system("cat temp.txt temp2.txt > {}".format(outfile))
-        os.system("rm temp.txt temp2.txt")
+        os.system("cat temp{1}.txt temp2{1}.txt > {0}".format(outfile, code))
+        os.system(f"rm temp{code}.txt temp2{code}.txt")
 
     mosaic.close()
