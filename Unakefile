@@ -81,19 +81,19 @@ rule i:
         "mos_"+FIELD+"/specfull.txt"
     shell:
         "python3 ../scratch/stuff/aper_sf2/src/get_specfull.py -t "+FIELD+" -c 2; "
-        "touch mos_"+FIELD+"/"+"specfull.txt"
+        "touch {output}"
 
 rule j:
     input:
-        "mos_"+FIELD+"/specfull.txt",
         "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image_cat.xml",
-        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image.fits"
+        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image.fits",
+        "mos_"+FIELD+"/specfull.txt"
     output:
         "mos_"+FIELD+"/sip.txt"
     shell:
         "sofia_image_pipeline -c {input[0]} -s panstarrs 'DSS2 Blue' 'GALEX Near UV' -i 5 -m; "
         #"sofia_image_pipeline -c {input[0]} -s 'DSS2 Blue' 'GALEX Near UV' -i 5 -m; "
-        "touch mos_"+FIELD+"/"+"sip.txt"
+        "touch {output}"
 
 rule k:
     input:
@@ -102,11 +102,20 @@ rule k:
         "mos_"+FIELD+"/sip_edit.txt"
     shell:
         "python3 ../scratch/stuff/aper_sf2/src/edit_sip_images.py -t "+FIELD+" -c 2; "
-        "touch mos_"+FIELD+"/"+"sip_edit.txt"
+        "touch {output}"
 
 rule l:
     input:
-        "mos_"+FIELD+"/sip_edit.txt"
+        "mos_" + FIELD + "/sip_edit.txt"
+    output:
+        "mos_" + FIELD + "/rename.txt"
+    shell:
+        "python3 ../scratch/stuff/aper_sf2/src/rename_combo.py -t " + FIELD + " -c 2; "
+        "touch {output}"
+
+rule m:
+    input:
+        "mos_"+FIELD+"/rename.txt"
     output:
         "mos_"+FIELD+"/"+FIELD+"_beams.png"
     shell:
