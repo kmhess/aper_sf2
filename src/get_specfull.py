@@ -42,6 +42,7 @@ cubes = [int(c) for c in args.cubes.split(',')]
 mos_loc = 'mos_' + taskid + '/'
 for c in cubes:
     filename = taskid + '_HIcube' + str(c) + '_clean_image'
+    print("[GET_SPECFULL] Reading in mosaicked {} field.".format(taskid))
     mosaic = fits.open(mos_loc + filename + '.fits')
     wcs_mos = WCS(mosaic[0].header).celestial
     channels = np.asarray(range(mosaic[0].data.shape[0]))
@@ -74,6 +75,7 @@ for c in cubes:
         spectrum = np.nansum(subcube[:, mask2d != 0], axis=1)
         n_pix = 0 * channels + np.sum(mask2d != 0)
 
+        print("[GET_SPECFULL] Writing *_specfull.txt for source {}.".format(s))
         code = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
         with open(f'temp{code}.txt', 'w') as f:
             f.write("# Integrated source spectrum with noise\n")
