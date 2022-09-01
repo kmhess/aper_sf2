@@ -1,24 +1,6 @@
 # https://stackoverflow.com/questions/66466082/how-do-i-write-a-snakemake-input-when-not-all-jobs-successfully-output-files-fro
 
 import os
-import glob
-#FIELD = "S2207+4114"
-#FIELD = "S1629+5324"
-#FIELD = "S1025+5550"
-#FIELD = "S1401+3130"
-#FIELD = "S1402+3622"
-#FIELD = "S1408+3356"
-#FIELD = "S1414+3130"
-#FIELD = "S1318+5550"
-#FIELD = "S1021+5815"
-#FIELD = "S0037+3130"
-#FIELD = "S0221+3130"
-#FIELD = "S0221+3356"
-#FIELD = "S1308+5324"
-#FIELD = "S1435+4832"
-#FIELD = "S1435+3356"
-#FIELD = "S1326+5324"
-#FIELD = "S1432+3848"
 
 configfile: "config.yaml"
 FIELD = config['FIELD']
