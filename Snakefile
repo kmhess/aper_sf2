@@ -1,7 +1,9 @@
 # https://stackoverflow.com/questions/66466082/how-do-i-write-a-snakemake-input-when-not-all-jobs-successfully-output-files-fro
 
 import os
-FIELD = 'S0129+3130'
+
+configfile: "config.yaml"
+FIELD = config['FIELD']
 
 wildcard_constraints:
     beam="\d+"
@@ -52,8 +54,10 @@ rule aggregate_mosaic:
         "mos_"+FIELD+"/"+FIELD+"_HIcube2_weights.fits"
     run:
         input = list(input)
-        mos_params = " -t ".join([i.split("/")[1] for i in input if "image" in i])
-        os.system('MosaicSteward -m spectral -c 0.1 -n '+FIELD+'_HIcube2 -i '+FIELD+' -o mos_'+FIELD+' -t ' + mos_params + ' -r')
+        #mos_params = " -t ".join([i.split("/")[1] for i in input if "image" in i])
+        mos_params = " ".join([i.split("/")[1] for i in input if "image" in i])
+        #os.system('MosaicSteward -m spectral -c 0.1 -n '+FIELD+'_HIcube2 -i '+FIELD+' -o mos_'+FIELD+' -t ' + mos_params + ' -r')
+        os.system('mosaic-queen -mc 0.1 -n '+FIELD+'_HIcube2 -i '+FIELD+' -o mos_'+FIELD+' -t '+mos_params+' -f')
 
 rule sofia:
     input:
