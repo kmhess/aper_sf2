@@ -117,6 +117,13 @@ def run2(i):
         if args.all:
             new_modelcube_data[chan[i], :, :] = pyfits.getdata('model_{:02}_{:02}_{:04}.fits'.format(b, minc + 1, chan[i]))
             new_residualcube_data[chan[i], :, :] = pyfits.getdata('residual_{:02}_{:02}_{:04}.fits'.format(b, minc + 1, chan[i]))
+    except IOError:
+        if os.path.isfile('model_{:02}_{:02}_{:04}'.format(b, minc + 1, chan[i])):
+            print("Miraid image file doesn't exist (all nan's?), but map does, so make a dummy nan channel.")
+            new_cleancube_data[chan[i], :, :] = np.nan
+            if args.all:
+                new_modelcube_data[chan[i], :, :] = pyfits.getdata('model_{:02}_{:02}_{:04}.fits'.format(b, minc + 1, chan[i]))
+                new_residualcube_data[chan[i], :, :] = pyfits.getdata('residual_{:02}_{:02}_{:04}.fits'.format(b, minc + 1, chan[i]))
     except RuntimeError:
         print("Couldn't add some channel to new cube because of above errors. Continue to next.".format(chan[i]))
 
