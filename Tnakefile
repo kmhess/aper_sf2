@@ -12,7 +12,7 @@ rule all:
     input:
         expand(FIELD + "/HI_B0{beam}.txt", beam=beams)
 
-rule a:
+rule make_bin_mask:
     input:
         "mos_"+FIELD+"/"+FIELD+"_HIcube2_image_sofiaFS_mask.fits"
     output:
@@ -20,7 +20,7 @@ rule a:
     shell:
         "python3 /mnt/scratch/stuff/aper_sf2/src/binary_mask.py -t "+FIELD+" -c 2"
 
-rule b:
+rule dilate_mask:
     input:
         "mos_"+FIELD+"/"+FIELD+"_HIcube2_image_sofiaFS_mask_bin.fits"
     output:
@@ -28,19 +28,21 @@ rule b:
     shell:
         "python3 /mnt/scratch/stuff/aper_sf2/src/dilate_binmask.py -t "+FIELD+" -c 2"
 
-rule c:
+rule regrid_masks:
     input:
         FIELD+"/HI_B0{bm}_cube2_image.fits",
         "mos_"+FIELD+"/"+FIELD+"_HIcube2_image_sofiaFS_mask_bin_dil.fits"
     output:
         "mos_"+FIELD+"/"+FIELD+"_HIcube2_image_sofiaFS_mask_bin_dil{bm}_regrid.fits"
-    threads:
-        #5  # Normal
-        2  # MDS fields (should really be doing this with memory allocation not threads
+#    threads:
+#        #5  # Normal
+#        3  # MDS fields (should really be doing this with memory allocation not threads
+    resources:
+        mem_mb = 55000
     shell:
         "python3 /mnt/scratch/stuff/aper_sf2/src/regridmask.py {input[0]} {input[1]}"
 
-rule d:
+rule generate_new_pb:
     input:
         FIELD+"/HI_B0{bm}_cube2_image.fits",
         "/mnt/scratch/apertif/cbeams/{bm}_gp_avg_orig.fits"
@@ -50,15 +52,18 @@ rule d:
         shell("python3 /mnt/scratch/stuff/aper_cube_stack/modules/regrid_aperpb.py -t {input[0]} -b {wildcards.bm} -p /mnt/scratch/apertif/cbeams/")
         shell("mv "+FIELD+"/HI_B0{wildcards.bm}_cube2_pb.fits {output}")
 
-rule e:
+rule stack_psf:
     input:
         FIELD+"/HI_B0{bm}_cube2_image.fits"
     output:
         FIELD+"/HI_B0{bm}_cube2_psf.fits"
-    threads:
-        #2
-        #4 # Normal
-        12 # MDS fields
+#    threads:
+#        #2
+#        #4 # Normal
+#        14 # MDS fields
+    resources:
+        # mem_mb = ??  # For AWES
+        mem_mb = 185000  # For MDS
     shell:
         "python3 /mnt/scratch/stuff/aper_cube_stack/psf_stack.py -f "+FIELD+" -b {wildcards.bm}"
 

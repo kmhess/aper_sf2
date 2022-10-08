@@ -19,14 +19,14 @@ rule all:
         "mos_"+FIELD+"/"+FIELD+"_HIcube2_image_sofiaFS_skellam.eps",
         "mos_"+FIELD+"/"+FIELD+"_HIcube2_image_filtered_spline.fits"
 
-checkpoint a:
+checkpoint stack_obs:
     output:
         directory(FIELD)#"FIELD")
     shell:
         "python3 /mnt/scratch/stuff/aper_cube_stack/cube_stack.py -f {output} -b 0-39"
 
 #run a separate job from each output of rule a
-rule b:
+rule generate_pb:
     input:
         FIELD+"/HI_B0{bm}_cube2_image.fits",
         "/mnt/scratch/apertif/cbeams/{bm}_gp_avg_orig.fits"
@@ -38,14 +38,14 @@ rule b:
 # input function for the rule aggregate
 def aggregate_input(wildcards):
     # say this rule depends on a checkpoint.  DAG evaulation pauses here
-    checkpoint_output = checkpoints.a.get(**wildcards).output[0]
+    checkpoint_output = checkpoints.stack_obs.get(**wildcards).output[0]
     found_files = expand(FIELD+"/HI_B0{beam}_cube2_pb.fits", 
                          beam=glob_wildcards(os.path.join(checkpoint_output, "HI_B0{beam}_cube2_image.fits")).beam)
     found_files2 = expand(FIELD+"/HI_B0{beam}_cube2_image.fits", 
                          beam=glob_wildcards(os.path.join(checkpoint_output, "HI_B0{beam}_cube2_image.fits")).beam)
     return found_files+found_files2
 
-rule aggregate_mosaic:
+rule make_mosaic:
     input:
         pb = aggregate_input,
     output:
@@ -59,7 +59,7 @@ rule aggregate_mosaic:
         #os.system('MosaicSteward -m spectral -c 0.1 -n '+FIELD+'_HIcube2 -i '+FIELD+' -o mos_'+FIELD+' -t ' + mos_params + ' -r')
         os.system('mosaic-queen -mc 0.1 -n '+FIELD+'_HIcube2 -i '+FIELD+' -o mos_'+FIELD+' -t '+mos_params+' -f')
 
-rule sofia:
+rule run_sofia:
     input:
         "mos_"+FIELD+"/"+FIELD+"_HIcube2_image.fits",
         "mos_"+FIELD+"/"+FIELD+"_HIcube2_noise.fits"

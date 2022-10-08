@@ -18,7 +18,7 @@ def aggregate_input(wildcards):
     found_files = expand(FIELD+"/HI_B0{xx}_cube2_spline_clean_image.fits", xx=beams)
     return found_files
 
-rule aggregate_mosaic2:
+rule make_mosaic2:
     input:
         pb = aggregate_input,
     output:
@@ -43,7 +43,7 @@ rule aggregate_mosaic2:
         os.system('rm -rf mos_'+FIELD+'/*imageR*')
         os.system('rm -rf mos_'+FIELD+'/*pbR*')
 
-rule h:
+rule run_sofia2:
     input:
         "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image.fits",
         "mos_"+FIELD+"/"+FIELD+"_HIcube2_image_sofiaFS_mask_bin_dil.fits"
@@ -55,7 +55,7 @@ rule h:
     shell:
         "/usr/bin/sofia ../scratch/stuff/aper_sf2/sofia_final_template.par input.data={input[0]} input.mask={input[1]}"
 
-rule i:
+rule generate_full_spec:
     input:
         "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image.fits",
         "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image_cat.xml"
@@ -65,10 +65,10 @@ rule i:
         "python3 ../scratch/stuff/aper_sf2/src/get_specfull.py -t "+FIELD+" -c 2; "
         "touch {output}"
 
-rule j:
+rule run_sip:
     input:
         "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image_cat.xml",
-        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image.fits",
+        # "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image.fits",
         "mos_"+FIELD+"/specfull.txt"
     output:
         "mos_"+FIELD+"/sip.txt"
@@ -77,7 +77,7 @@ rule j:
         #"sofia_image_pipeline -c {input[0]} -s 'DSS2 Blue' 'GALEX Near UV' -i 5 -m; "
         "touch {output}"
 
-rule k:
+rule edit_sip_figs:
     input:
         "mos_"+FIELD+"/sip.txt"
     output:
@@ -86,7 +86,7 @@ rule k:
         "python3 ../scratch/stuff/aper_sf2/src/edit_sip_images.py -t "+FIELD+" -c 2; "
         "touch {output}"
 
-rule l:
+rule rename_pngs:
     input:
         "mos_" + FIELD + "/sip_edit.txt"
     output:
@@ -95,7 +95,7 @@ rule l:
         "python3 ../scratch/stuff/aper_sf2/src/rename_combo.py -t " + FIELD + " -c 2; "
         "touch {output}"
 
-rule m:
+rule generate_psf_stats:
     input:
         "mos_"+FIELD+"/rename.txt"
     output:
