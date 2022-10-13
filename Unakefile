@@ -4,74 +4,75 @@ import os
 
 configfile: "config.yaml"
 FIELD = config['FIELD']
+CUBE = str(config['CUBE'])
 
-beams, = glob_wildcards(FIELD+"/HI_B0{xx}_cube2_spline_clean_image.fits")
+beams, = glob_wildcards(FIELD+"/HI_B0{xx}_cube"+CUBE+"_spline_clean_image.fits")
 
 wildcard_constraints:
     beams="\d+"
 
 rule all:
     input:
-        "mos_"+FIELD+"/"+FIELD+"_beams.png"
+        "mos_"+FIELD+"/"+FIELD+"_beams_cube"+CUBE+".png"
 
 def aggregate_input(wildcards):
-    found_files = expand(FIELD+"/HI_B0{xx}_cube2_spline_clean_image.fits", xx=beams)
+    found_files = expand(FIELD+"/HI_B0{xx}_cube"+CUBE+"_spline_clean_image.fits", xx=beams)
     return found_files
 
 rule make_mosaic2:
     input:
         pb = aggregate_input,
     output:
-        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image.fits",
-        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image.hdr",
-        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_noise.fits",
-        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_weights.fits",
-        temp("mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image_fields"),
-        temp("mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image_fields.tbl"),
-        temp("mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image_fields_regrid"),
-        temp("mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image_fields_regrid.tbl"),
-        temp("mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_beams_regrid"),
-        temp("mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_beams_regrid.tbl"),
-        # temp("mos_"+FIELD+"/HI_B0{beam}_cube2_spline_clean_imageR.fits"),
-        # temp("mos_"+FIELD+"/HI_B0{beam}_cube2_spline_clean_imageR_area.fits"),
-        # temp("mos_"+FIELD+"/HI_B0{beam}_cube2_spline_clean_pbR.fits"),
-        # temp("mos_"+FIELD+"/HI_B0{beam}_cube2_spline_clean_pbR_area.fits")
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image.fits",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image.hdr",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_noise.fits",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_weights.fits",
+        temp("mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_fields"),
+        temp("mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_fields.tbl"),
+        temp("mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_fields_regrid"),
+        temp("mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_fields_regrid.tbl"),
+        temp("mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_beams_regrid"),
+        temp("mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_beams_regrid.tbl"),
+        # temp("mos_"+FIELD+"/HI_B0{beam}_cube"+CUBE+"_spline_clean_imageR.fits"),
+        # temp("mos_"+FIELD+"/HI_B0{beam}_cube"+CUBE+"_spline_clean_imageR_area.fits"),
+        # temp("mos_"+FIELD+"/HI_B0{beam}_cube"+CUBE+"_spline_clean_pbR.fits"),
+        # temp("mos_"+FIELD+"/HI_B0{beam}_cube"+CUBE+"_spline_clean_pbR_area.fits")
     run:
         input = list(input)
         mos_params = " ".join([i.split("/")[1] for i in input if "spline_clean_image" in i])
-        os.system('mosaic-queen -mc 0.1 -n '+FIELD+'_HIcube2_clean -i '+FIELD+' -o mos_'+FIELD+' -t '+mos_params+' -r')
+        os.system('mosaic-queen -mc 0.1 -n '+FIELD+'_HIcube'+CUBE+'_clean -i '+FIELD+' -o mos_'+FIELD+' -t '+mos_params+' -r')
         os.system('rm -rf mos_'+FIELD+'/*imageR*')
         os.system('rm -rf mos_'+FIELD+'/*pbR*')
 
 rule run_sofia2:
     input:
-        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image.fits",
-        "mos_"+FIELD+"/"+FIELD+"_HIcube2_image_sofiaFS_mask_bin_dil.fits"
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image.fits",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin_dil.fits"
     output:
-        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image_cat.txt",
-        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image_cat.xml",
-        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image_mask-2d.fits",
-        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image_mask.fits"
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_cat.txt",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_cat.xml",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_mask-2d.fits",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_mask.fits"
     shell:
         "/usr/bin/sofia ../scratch/stuff/aper_sf2/sofia_final_template.par input.data={input[0]} input.mask={input[1]}"
 
 rule generate_full_spec:
     input:
-        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image.fits",
-        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image_cat.xml"
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image.fits",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_cat.xml"
     output:
-        "mos_"+FIELD+"/specfull.txt"
+        "mos_"+FIELD+"/specfull_cube"+CUBE+".txt"
     shell:
-        "python3 ../scratch/stuff/aper_sf2/src/get_specfull.py -t "+FIELD+" -c 2; "
+        "python3 ../scratch/stuff/aper_sf2/src/get_specfull.py -t "+FIELD+" -c "+CUBE+"; "
         "touch {output}"
 
 rule run_sip:
     input:
-        "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image_cat.xml",
-        # "mos_"+FIELD+"/"+FIELD+"_HIcube2_clean_image.fits",
-        "mos_"+FIELD+"/specfull.txt"
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_cat.xml",
+        # "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image.fits",
+        "mos_"+FIELD+"/specfull_cube"+CUBE+".txt"
     output:
-        "mos_"+FIELD+"/sip.txt"
+        "mos_"+FIELD+"/sip_cube"+CUBE+".txt"
     shell:
         "sofia_image_pipeline -c {input[0]} -s panstarrs 'DSS2 Blue' 'GALEX Near UV' -i 5 -m; "
         #"sofia_image_pipeline -c {input[0]} -s 'DSS2 Blue' 'GALEX Near UV' -i 5 -m; "
@@ -79,26 +80,26 @@ rule run_sip:
 
 rule edit_sip_figs:
     input:
-        "mos_"+FIELD+"/sip.txt"
+        "mos_"+FIELD+"/sip_cube"+CUBE+".txt"
     output:
-        "mos_"+FIELD+"/sip_edit.txt"
+        "mos_"+FIELD+"/sip_cube"+CUBE+"_edit.txt"
     shell:
-        "python3 ../scratch/stuff/aper_sf2/src/edit_sip_images.py -t "+FIELD+" -c 2; "
+        "python3 ../scratch/stuff/aper_sf2/src/edit_sip_images.py -t "+FIELD+" -c "+CUBE+"; "
         "touch {output}"
 
 rule rename_pngs:
     input:
-        "mos_" + FIELD + "/sip_edit.txt"
+        "mos_" + FIELD + "/sip_cube"+CUBE+"_edit.txt"
     output:
-        "mos_" + FIELD + "/rename.txt"
+        "mos_" + FIELD + "/rename_cube"+CUBE+".txt"
     shell:
-        "python3 ../scratch/stuff/aper_sf2/src/rename_combo.py -t " + FIELD + " -c 2; "
+        "python3 ../scratch/stuff/aper_sf2/src/rename_combo.py -t " + FIELD + " -c "+CUBE+"; "
         "touch {output}"
 
 rule generate_psf_stats:
     input:
-        "mos_"+FIELD+"/rename.txt"
+        "mos_"+FIELD+"/rename_cube"+CUBE+".txt"
     output:
-        "mos_"+FIELD+"/"+FIELD+"_beams.png"
+        "mos_"+FIELD+"/"+FIELD+"_beams_cube"+CUBE+".png"
     shell:
-        "python3 ../scratch/stuff/aper_sf2/src/plot_beams.py -t "+FIELD+" -c 2"
+        "python3 ../scratch/stuff/aper_sf2/src/plot_beams.py -t "+FIELD+" -c "+CUBE
