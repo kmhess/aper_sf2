@@ -216,8 +216,9 @@ def main(loc, taskid, beam=[40], cubes=[1, 2, 3], nospline=False, mosaic=False):
                         if mosaic:
                             if (panel == source_per_beam - 1) | (s == len(cat) - 1):
                                 ax_spec[panel, 0].set_xlabel("Optical Velocity [km/s]")
-                                fig_spec.savefig(loc + 'HI_image_sofia_summary_spec{}of{}_filtspline.png'.format(s//source_per_beam+1,
-                                                 np.int(np.ceil(len(cat)/source_per_beam))), bbox_inches='tight')
+                                fig_spec.savefig(loc + 'HI_image{}_sofia_summary_spec{}of{}_filtspline.png'.format(c,
+                                                 s//source_per_beam+1, np.int(np.ceil(len(cat)/source_per_beam))),
+                                                 bbox_inches='tight')
                         else:
                             if previous + s == source_per_beam - 1:
                                 ax_spec[previous + s, 0].set_xlabel("Optical Velocity [km/s]")
@@ -238,13 +239,13 @@ def main(loc, taskid, beam=[40], cubes=[1, 2, 3], nospline=False, mosaic=False):
                     ax_im[c - 1].axis('off')
 
             if nospline:
-                fig_im.savefig(loc + 'HI_image_sofia_summary.png', bbox_inches='tight')
+                fig_im.savefig(loc + 'HI_image' + str(c) + '_sofia_summary.png', bbox_inches='tight')
                 if not mosaic:
-                    fig_spec.savefig(loc + 'HI_image_sofia_summary_spec.png', bbox_inches='tight')
+                    fig_spec.savefig(loc + 'HI_image' + str(c) + '_sofia_summary_spec.png', bbox_inches='tight')
             else:
-                fig_im.savefig(loc + 'HI_image_sofia_summary_filtspline.png', bbox_inches='tight')
+                fig_im.savefig(loc + 'HI_image' + str(c) + '_sofia_summary_filtspline.png', bbox_inches='tight')
                 if not mosaic:
-                    fig_spec.savefig(loc + 'HI_image_sofia_summary_spec_filtspline.png', bbox_inches='tight')
+                    fig_spec.savefig(loc + 'HI_image' + str(c) + '_sofia_summary_spec_filtspline.png', bbox_inches='tight')
             plt.close(fig_im)
             plt.close(fig_spec)
         else:

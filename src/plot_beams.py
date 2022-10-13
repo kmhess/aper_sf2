@@ -76,4 +76,4 @@ ax2b.set_ylabel("Median per beam")
 ax2.legend(loc=2)
 ax2b.legend(loc=1)
 
-fig.savefig('mos_{0}/{0}_beams.png'.format(args.taskid), bbox_inches='tight')
+fig.savefig('mos_{0}/{0}_beams_cube{1}.png'.format(args.taskid, args.cubes[0]), bbox_inches='tight')
