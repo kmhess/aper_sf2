@@ -40,6 +40,7 @@ for c in cubes:
 
     for s in sources:
         cat = catalog[catalog['id'] == int(s)]
-        infile = f"{mos_loc}{filename}_figures/{filename}_{s}_combo.png"
-        outfile = f"{mos_loc}{filename}_figures/AHC{cat['name'][0].split(' ')[1]}_{taskid}_{s}_combo.png"
-        os.system(f"mv {infile} {outfile}")
+        if len(cat) > 0:
+            infile = f"{mos_loc}{filename}_figures/{filename}_{s}_combo.png"
+            outfile = f"{mos_loc}{filename}_figures/AHC{cat['name'][0].split(' ')[1]}_{taskid}_{s}_combo.png"
+            os.system(f"mv {infile} {outfile}")

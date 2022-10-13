@@ -60,64 +60,65 @@ for c in cubes:
 
     for s in sources:
         cat = catalog[catalog['id'] == int(s)]
-        Xc = cat["x"]
-        Yc = cat["y"]
-        Xmin = cat["x_min"]
-        Ymin = cat["y_min"]
-        Zmin = cat["z_min"]
-        Xmax = cat["x_max"]
-        Ymax = cat["y_max"]
-        Zmax = cat["z_max"]
-        cPixXNew = int(Xc)
-        cPixYNew = int(Yc)
-        maxX = 2 * max(abs(cPixXNew - Xmin), abs(cPixXNew - Xmax))
-        maxY = 2 * max(abs(cPixYNew - Ymin), abs(cPixYNew - Ymax))
-        XminNew = cPixXNew - maxX
-        if XminNew < 0: XminNew = 0
-        YminNew = cPixYNew - maxY
-        if YminNew < 0: YminNew = 0
-        XmaxNew = cPixXNew + maxX
-        if XmaxNew > cubeDim[1] - 1: XmaxNew = cubeDim[1] - 1
-        YmaxNew = cPixYNew + maxY
-        if YmaxNew > cubeDim[0] - 1: YmaxNew = cubeDim[0] - 1
+        if len(cat) > 0:
+            Xc = cat["x"]
+            Yc = cat["y"]
+            Xmin = cat["x_min"]
+            Ymin = cat["y_min"]
+            Zmin = cat["z_min"]
+            Xmax = cat["x_max"]
+            Ymax = cat["y_max"]
+            Zmax = cat["z_max"]
+            cPixXNew = int(Xc)
+            cPixYNew = int(Yc)
+            maxX = 2 * max(abs(cPixXNew - Xmin), abs(cPixXNew - Xmax))
+            maxY = 2 * max(abs(cPixYNew - Ymin), abs(cPixYNew - Ymax))
+            XminNew = cPixXNew - maxX
+            if XminNew < 0: XminNew = 0
+            YminNew = cPixYNew - maxY
+            if YminNew < 0: YminNew = 0
+            XmaxNew = cPixXNew + maxX
+            if XmaxNew > cubeDim[1] - 1: XmaxNew = cubeDim[1] - 1
+            YmaxNew = cPixYNew + maxY
+            if YmaxNew > cubeDim[0] - 1: YmaxNew = cubeDim[0] - 1
 
-        # Create subimage of the continuum filtering & 2d mask to raise flag if it affects source
-        filter2d = hdu_filter2d[0].data[int(YminNew):int(YmaxNew) + 1, int(XminNew):int(XmaxNew) + 1]
-        mask2d = hdu_mask2d[0].data[int(YminNew):int(YmaxNew) + 1, int(XminNew):int(XmaxNew) + 1]
-        result = generic_filter(filter2d, test_mask, footprint=foot)
+            # Create subimage of the continuum filtering & 2d mask to raise flag if it affects source
+            filter2d = hdu_filter2d[0].data[int(YminNew):int(YmaxNew) + 1, int(XminNew):int(XmaxNew) + 1]
+            mask2d = hdu_mask2d[0].data[int(YminNew):int(YmaxNew) + 1, int(XminNew):int(XmaxNew) + 1]
+            result = generic_filter(filter2d, test_mask, footprint=foot)
 
-        # raise flag if believe impacted by flagged channel:
-        spec_txt = ascii.read(mos_loc + filename + '_figures/' + filename + '_' + str(s) + '_specfull.txt')
-        spec = spec_txt[np.where(spec_txt['chan'] == Zmin)[0][0]:np.where(spec_txt['chan'] == Zmax)[0][0] + 1]
-        spec_flag = np.any(spec['f_sum'] == 0.0)
+            # raise flag if believe impacted by flagged channel:
+            spec_txt = ascii.read(mos_loc + filename + '_figures/' + filename + '_' + str(s) + '_specfull.txt')
+            spec = spec_txt[np.where(spec_txt['chan'] == Zmin)[0][0]:np.where(spec_txt['chan'] == Zmax)[0][0] + 1]
+            spec_flag = np.any(spec['f_sum'] == 0.0)
 
-        if (np.nansum(result * mask2d) > 0.) or (spec_flag):
-            combo_im_name = mos_loc + filename + "_figures/" + filename + '_' + s + '_combo.png'
-            combo_im = Image.open(combo_im_name)
-            I1 = ImageDraw.Draw(combo_im)
+            if (np.nansum(result * mask2d) > 0.) or (spec_flag):
+                combo_im_name = mos_loc + filename + "_figures/" + filename + '_' + s + '_combo.png'
+                combo_im = Image.open(combo_im_name)
+                I1 = ImageDraw.Draw(combo_im)
 
-            if np.nansum(result * mask2d) > 0.:
-                print("\tSpatial filtering flag for source {}".format(s))
-                I1.text((0.051*combo_im.size[0], 0.037*combo_im.size[1]), "!",
-                        font=ImageFont.truetype(font=font, size=48), fill=(255, 0, 0))
-                I1.text((0.280*combo_im.size[0], 0.037*combo_im.size[1]), "!",
-                        font=ImageFont.truetype(font=font, size=48), fill=(255, 0, 0))
-                I1.text((0.539*combo_im.size[0], 0.037*combo_im.size[1]), "!",
-                        font=ImageFont.truetype(font=font, size=48), fill=(255, 0, 0))
-                I1.text((0.791*combo_im.size[0], 0.037*combo_im.size[1]), "!",
-                        font=ImageFont.truetype(font=font, size=48), fill=(255, 0, 0))
-            if spec_flag:
-                print("\tSpectral flag for source {}".format(s))
-                I1.text((0.061 * combo_im.size[0], 0.037 * combo_im.size[1]), "!",
-                        font=ImageFont.truetype(font=font, size=48), fill=(255, 165, 0))
-                I1.text((0.290 * combo_im.size[0], 0.037 * combo_im.size[1]), "!",
-                        font=ImageFont.truetype(font=font, size=48), fill=(255, 165, 0))
-                I1.text((0.549 * combo_im.size[0], 0.037 * combo_im.size[1]), "!",
-                        font=ImageFont.truetype(font=font, size=48), fill=(255, 165, 0))
-                I1.text((0.801 * combo_im.size[0], 0.037 * combo_im.size[1]), "!",
-                        font=ImageFont.truetype(font=font, size=48), fill=(255, 165, 0))
+                if np.nansum(result * mask2d) > 0.:
+                    print("\tSpatial filtering flag for source {}".format(s))
+                    I1.text((0.051*combo_im.size[0], 0.037*combo_im.size[1]), "!",
+                            font=ImageFont.truetype(font=font, size=48), fill=(255, 0, 0))
+                    I1.text((0.280*combo_im.size[0], 0.037*combo_im.size[1]), "!",
+                            font=ImageFont.truetype(font=font, size=48), fill=(255, 0, 0))
+                    I1.text((0.539*combo_im.size[0], 0.037*combo_im.size[1]), "!",
+                            font=ImageFont.truetype(font=font, size=48), fill=(255, 0, 0))
+                    I1.text((0.791*combo_im.size[0], 0.037*combo_im.size[1]), "!",
+                            font=ImageFont.truetype(font=font, size=48), fill=(255, 0, 0))
+                if spec_flag:
+                    print("\tSpectral flag for source {}".format(s))
+                    I1.text((0.061 * combo_im.size[0], 0.037 * combo_im.size[1]), "!",
+                            font=ImageFont.truetype(font=font, size=48), fill=(255, 165, 0))
+                    I1.text((0.290 * combo_im.size[0], 0.037 * combo_im.size[1]), "!",
+                            font=ImageFont.truetype(font=font, size=48), fill=(255, 165, 0))
+                    I1.text((0.549 * combo_im.size[0], 0.037 * combo_im.size[1]), "!",
+                            font=ImageFont.truetype(font=font, size=48), fill=(255, 165, 0))
+                    I1.text((0.801 * combo_im.size[0], 0.037 * combo_im.size[1]), "!",
+                            font=ImageFont.truetype(font=font, size=48), fill=(255, 165, 0))
 
-            combo_im.save(combo_im_name)
+                combo_im.save(combo_im_name)
 
     hdu_mask2d.close()
     hdu_filter2d.close()
