@@ -61,36 +61,39 @@ for c in cubes:
 
     for s in sources:
         outfile = mos_loc + filename + '_figures/' + filename + '_' + str(s) + '_specfull.txt'
-        src_hdu = fits.open(mos_loc + filename + '_cubelets/' + filename + '_' + str(s) + '_mask.fits')
-        mask2d = np.sum(src_hdu[0].data, axis=0)
-        wcs_src = WCS(src_hdu[0].header).celestial
-        src_hdu.close()
+        if not os.path.isfile(outfile):
+            src_hdu = fits.open(mos_loc + filename + '_cubelets/' + filename + '_' + str(s) + '_mask.fits')
+            mask2d = np.sum(src_hdu[0].data, axis=0)
+            wcs_src = WCS(src_hdu[0].header).celestial
+            src_hdu.close()
 
-        radec1 = wcs_src.pixel_to_world(0, 0)
-        radec2 = wcs_src.pixel_to_world(mask2d.shape[1]-1, mask2d.shape[0]-1)
-        x1, y1 = wcs_mos.world_to_pixel(radec1)
-        x2, y2 = wcs_mos.world_to_pixel(radec2)
+            radec1 = wcs_src.pixel_to_world(0, 0)
+            radec2 = wcs_src.pixel_to_world(mask2d.shape[1]-1, mask2d.shape[0]-1)
+            x1, y1 = wcs_mos.world_to_pixel(radec1)
+            x2, y2 = wcs_mos.world_to_pixel(radec2)
 
-        subcube = mosaic[0].data[:, int(np.rint(y1)):int(np.rint(y2))+1, int(np.rint(x1)):int(np.rint(x2))+1]
-        spectrum = np.nansum(subcube[:, mask2d != 0], axis=1)
-        n_pix = 0 * channels + np.sum(mask2d != 0)
+            subcube = mosaic[0].data[:, int(np.rint(y1)):int(np.rint(y2))+1, int(np.rint(x1)):int(np.rint(x2))+1]
+            spectrum = np.nansum(subcube[:, mask2d != 0], axis=1)
+            n_pix = 0 * channels + np.sum(mask2d != 0)
 
-        print("[GET_SPECFULL] Writing *_specfull.txt for source {}.".format(s))
-        code = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
-        with open(f'temp{code}.txt', 'w') as f:
-            f.write("# Integrated source spectrum with noise\n")
-            f.write("# Creator: SoFiA-image-pipeline.py\n")  # %s\n#\n" % sofia_version_full)
-            f.write("# \n")
-            f.write("# The source spectrum, with noise, is calculated by integrating over\n")
-            f.write("# the 2D mask of the source in every channel.  This means every row \n")
-            f.write("# has the same number of contributing pixels and the noise is the same\n")
-            f.write("# for every point.\n")
-            f.write("# \n")
+            print("[GET_SPECFULL] Writing *_specfull.txt for source {}.".format(s))
+            code = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
+            with open(f'temp{code}.txt', 'w') as f:
+                f.write("# Integrated source spectrum with noise\n")
+                f.write("# Creator: SoFiA-image-pipeline.py\n")  # %s\n#\n" % sofia_version_full)
+                f.write("# \n")
+                f.write("# The source spectrum, with noise, is calculated by integrating over\n")
+                f.write("# the 2D mask of the source in every channel.  This means every row \n")
+                f.write("# has the same number of contributing pixels and the noise is the same\n")
+                f.write("# for every point.\n")
+                f.write("# \n")
 
-            ascii.write([channels, frequency, spectrum, n_pix], f'temp2{code}.txt', format='fixed_width_two_line',
-                        names=['chan', 'freq', 'f_sum', 'n_pix'])
+                ascii.write([channels, frequency, spectrum, n_pix], f'temp2{code}.txt', format='fixed_width_two_line',
+                            names=['chan', 'freq', 'f_sum', 'n_pix'])
 
-        os.system("cat temp{1}.txt temp2{1}.txt > {0}".format(outfile, code))
-        os.system(f"rm temp{code}.txt temp2{code}.txt")
+            os.system(f"cat temp{code}.txt temp2{code}.txt > {outfile}")
+            os.system(f"rm temp{code}.txt temp2{code}.txt")
+        else:
+            print(f"\t{outfile} already exists.  Will not overwrite.")
 
     mosaic.close()
