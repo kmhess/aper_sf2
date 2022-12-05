@@ -27,8 +27,8 @@ def run(i):
 
     # try:
 
-    tmpmask = data[i, :, :] > 1.0 * np.nanstd(data[i, :, :])
-    dilmask[i, :, :] = ndimage.binary_dilation(mask[i, :, :], mask=tmpmask, iterations=3).astype(data.dtype)
+    tmpmask = data[i, :, :] > threshold * np.nanstd(data[i, :, :])
+    dilmask[i, :, :] = ndimage.binary_dilation(mask[i, :, :], mask=tmpmask, iterations=iters).astype(data.dtype)
 
     #     return 'OK'
     #
@@ -52,9 +52,22 @@ parser.add_argument('-t', '--taskid', default='190915041',
 parser.add_argument('-c', '--cubes', default='1,2,3', required=True,
                     help='Specify the cubes on which to do source finding (default: %(default)s).')
 
+parser.add_argument('-h', '--threshold', default='1.0',
+                    help='Specify the sigma threshold for mask dilation (default: %(default)s).')
+
+parser.add_argument('-i', '--iterations', default='3',
+                    help='Specify the number of iterations for mask dilation (default: %(default)s).')
+
 parser.add_argument('-j', "--njobs",
                     help="Number of jobs to run in parallel (default: %(default)s) tested on happili-05.",
                     default=18)
+
+parser.add_argument('-f', "--filename", default=None,
+                    help="If provided, override default naming scheme for taskid/beam/cube.")
+
+parser.add_argument('-s', "--suffix", default='new',
+                    help="Only relevant when filename is provided. Optional suffix for new file.")
+
 
 # Parse the arguments above
 args = parser.parse_args()
@@ -68,15 +81,24 @@ args = parser.parse_args()
 taskid = args.taskid
 cubes = args.cubes
 njobs = args.njobs
+filename = args.filename
+suffix = '_' + args.suffix
+threshold = np.float(args.threshold)
+iters = np.int(args.iterations)
 
 loc = 'mos_' + taskid + '/'
 
 for c in cubes:
     cube_name = taskid + '_HIcube' + str(c) + '_image'
 
-    bin_mask_file = loc + cube_name + '_sofiaFS_mask_bin.fits'
-    dilat_mask_file = loc + cube_name + '_sofiaFS_mask_bin_dil.fits'
-    print("[DILATE_BINMASK] Dilating {} binary mask.".format(taskid))
+    if not filename:
+        bin_mask_file = loc + cube_name + '_sofiaFS_mask_bin.fits'
+        dilat_mask_file = loc + cube_name + '_sofiaFS_mask_bin_dil.fits'
+        print("[DILATE_BINMASK] Dilating {} binary mask.".format(taskid))
+    else:
+        bin_mask_file = filename
+        dilat_mask_file = loc + filename[:-5].split("/")[-1] + '{}.fits'.format(suffix)
+        print("[DILATE_BINMASK] Dilating {} binary mask.".format(filename))
 
     mask_hdu = fits.open(bin_mask_file, mode='update')
     mask = mask_hdu[0].data
@@ -85,10 +107,16 @@ for c in cubes:
     dilmask_hdu = fits.open(dilat_mask_file, mode='update')
     dilmask = dilmask_hdu[0].data
 
-    data_hdu = fits.open(loc + cube_name + '.fits')
-    data = data_hdu[0].data
+    if not filename:
+        # Normal operations, dilation is done before cleaning
+        data_hdu = fits.open(loc + cube_name + '.fits')
+        data = data_hdu[0].data
+    else:
+        # For smoothed data; it's already been cleaned
+        data_hdu = fits.open(loc + cube_name[:-6] + '_clean_smooth_image.fits')
+        data = data_hdu[0].data
 
-    # Define what lines of sight need to be kept based on input sources numbers
+    # Define number of cases
     ncases = data.shape[0]
     print(" - " + str(ncases) + " cases found")
 
