@@ -29,6 +29,9 @@ parser.add_argument('-c', '--cubes', default='1,2,3',
 parser.add_argument('-s', '--sources', default='all',
                     help='Specify sources to flag if necessary.  Can specify range or list. (default: %(default)s).')
 
+parser.add_argument('-p', '--prefix', default=None,
+                    help='Specify sources to flag if necessary.  Can specify range or list. (default: %(default)s).')
+
 ###################################################################
 
 # Parse the arguments above
@@ -38,10 +41,17 @@ args = parser.parse_args()
 # Range of cubes/sources to work on:
 taskid = args.taskid
 cubes = [int(c) for c in args.cubes.split(',')]
+# if args.prefix:
+#     prefix = args.prefix + '_'
+# else:
+#     prefix = ''
 
 mos_loc = 'mos_' + taskid + '/'
 for c in cubes:
-    filename = taskid + '_HIcube' + str(c) + '_clean_image'
+    if not args.prefix:
+        filename = taskid + '_HIcube' + str(c) + '_clean_image'
+    else:
+        filename = taskid + '_HIcube' + str(c) + '_clean_smooth_image'
     print("[GET_SPECFULL] Reading in mosaicked {} field.".format(taskid))
     mosaic = fits.open(mos_loc + filename + '.fits')
     wcs_mos = WCS(mosaic[0].header).celestial
@@ -60,6 +70,7 @@ for c in cubes:
         sources = [str(s) for s in args.sources.split(',')]
 
     for s in sources:
+        # outfile = mos_loc + prefix + filename + '_figures/' + filename + '_' + str(s) + '_specfull.txt'
         outfile = mos_loc + filename + '_figures/' + filename + '_' + str(s) + '_specfull.txt'
         if not os.path.isfile(outfile):
             src_hdu = fits.open(mos_loc + filename + '_cubelets/' + filename + '_' + str(s) + '_mask.fits')
