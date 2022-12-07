@@ -28,6 +28,9 @@ parser.add_argument('-c', '--cubes', default='1,2,3',
 parser.add_argument('-s', '--sources', default='all',
                     help='Specify sources to flag if necessary.  Can specify range or list. (default: %(default)s).')
 
+parser.add_argument('-w', '--smooth', action='store_true',
+                    help='If option is included apply edits to the smoothed SIP images.')
+
 ###################################################################
 
 # Parse the arguments above
@@ -45,6 +48,8 @@ mos_loc = 'mos_' + taskid + '/'
 for c in cubes:
     old_filename = taskid + '_HIcube' + str(c) + '_image'
     filename = taskid + '_HIcube' + str(c) + '_clean_image'
+    if args.smooth:
+        filename = taskid + '_HIcube' + str(c) + '_clean_smooth_image'
     catalog = Table.read(mos_loc + filename + '_cat.txt', format='ascii', header_start=18)
     hdu_mask2d = fits.open(mos_loc + filename + '_mask-2d.fits')
     hdu_filter2d = fits.open(mos_loc + old_filename + '_filtered-2d.fits')
