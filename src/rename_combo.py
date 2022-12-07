@@ -16,6 +16,12 @@ parser.add_argument('-c', '--cubes', default='1,2,3',
 parser.add_argument('-s', '--sources', default='all',
                     help='Specify sources to flag if necessary.  Can specify range or list. (default: %(default)s).')
 
+parser.add_argument('-p', '--prefix', default='sm',
+                    help='Add a prefix to the file name (making new ones?). (default: %(default)s).')
+
+parser.add_argument('-w', '--smooth', action='store_true',
+                    help='If option is included apply edits to the smoothed SIP images.')
+
 ###################################################################
 
 # Parse the arguments above
@@ -24,10 +30,16 @@ args = parser.parse_args()
 # Range of cubes/sources to work on:
 taskid = args.taskid
 cubes = [int(c) for c in args.cubes.split(',')]
+if args.prefix:
+    prefix = args.prefix + '_'
+else:
+    prefix = ''
 
 mos_loc = 'mos_' + taskid + '/'
 for c in cubes:
     filename = taskid + '_HIcube' + str(c) + '_clean_image'
+    if args.smooth:
+        filename = taskid + '_HIcube' + str(c) + '_clean_smooth_image'
     catalog = Table.read(mos_loc + filename + '_cat.xml')
 
     if args.sources == 'all':
@@ -42,5 +54,5 @@ for c in cubes:
         cat = catalog[catalog['id'] == int(s)]
         if len(cat) > 0:
             infile = f"{mos_loc}{filename}_figures/{filename}_{s}_combo.png"
-            outfile = f"{mos_loc}{filename}_figures/AHC{cat['name'][0].split(' ')[1]}_{taskid}_{s}_combo.png"
+            outfile = f"{mos_loc}{filename}_figures/{prefix}AHC{cat['name'][0].split(' ')[1]}_{taskid}_{s}_combo.png"
             os.system(f"mv {infile} {outfile}")
