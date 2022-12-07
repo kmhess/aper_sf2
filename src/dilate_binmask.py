@@ -46,21 +46,20 @@ parser = ArgumentParser(description="Dilate a 2d binary mask including just the 
 #                     help='Specify the input working directory relative to where you\'re running.'
 #                          ' Important for mosaic. (default: %(default)s).')
 
-parser.add_argument('-t', '--taskid', default='190915041',
+parser.add_argument('-t', '--taskid', default='190915041', required=True,
                     help='Specify the input taskid or field (default: %(default)s).')
 
 parser.add_argument('-c', '--cubes', default='1,2,3', required=True,
                     help='Specify the cubes on which to do source finding (default: %(default)s).')
 
-parser.add_argument('-h', '--threshold', default='1.0',
+parser.add_argument('-r', '--threshold', default='1.0', type=float,
                     help='Specify the sigma threshold for mask dilation (default: %(default)s).')
 
-parser.add_argument('-i', '--iterations', default='3',
+parser.add_argument('-i', '--iterations', default='3', type=int,
                     help='Specify the number of iterations for mask dilation (default: %(default)s).')
 
-parser.add_argument('-j', "--njobs",
-                    help="Number of jobs to run in parallel (default: %(default)s) tested on happili-05.",
-                    default=18)
+parser.add_argument('-j', "--njobs", default=18,
+                    help="Number of jobs to run in parallel (default: %(default)s) tested on happili-05.")
 
 parser.add_argument('-f', "--filename", default=None,
                     help="If provided, override default naming scheme for taskid/beam/cube.")
@@ -83,8 +82,8 @@ cubes = args.cubes
 njobs = args.njobs
 filename = args.filename
 suffix = '_' + args.suffix
-threshold = np.float(args.threshold)
-iters = np.int(args.iterations)
+threshold = args.threshold
+iters = int(args.iterations)
 
 loc = 'mos_' + taskid + '/'
 
