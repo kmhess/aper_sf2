@@ -540,4 +540,4 @@ for b in beams:
         else:
             print("no mask?")
 
-print("[CLEAN2] Done.")
+print("[CLEAN2] Done.\n")
