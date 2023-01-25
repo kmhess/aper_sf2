@@ -24,7 +24,7 @@ checkpoint stack_obs:
     output:
         directory(FIELD)#"FIELD")
     shell:
-        "python3 /mnt/scratch/stuff/aper_cube_stack/cube_stack.py -f {output} -b 29,30,35,36 -c "+CUBE
+        "python3 /mnt/scratch/stuff/aper_cube_stack/cube_stack.py -f {output} -b 0-39 -c "+CUBE
 
 #run a separate job from each output of rule a
 rule generate_pb:
