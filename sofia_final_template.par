@@ -120,14 +120,14 @@ threshold.fluxRange        =  negative
 
 linker.enable              =  true
 linker.radiusXY            =  2
-linker.radiusZ             =  3
+linker.radiusZ             =  8  # Covering at least ~56 km/s at 7 km/s resolution
 linker.minSizeXY           =  5
 linker.minSizeZ            =  5
 linker.maxSizeXY           =  300
 linker.maxSizeZ            =  140
 linker.minPixels           =  0
 linker.maxPixels           =  0
-linker.minFill             =  0.05
+linker.minFill             =  0.0
 linker.maxFill             =  0.0
 linker.positivity          =  false
 linker.keepNegative        =  false
