@@ -16,7 +16,7 @@ parser.add_argument('-c', '--cubes', default='1,2,3',
 parser.add_argument('-s', '--sources', default='all',
                     help='Specify sources to flag if necessary.  Can specify range or list. (default: %(default)s).')
 
-parser.add_argument('-p', '--prefix', default='sm',
+parser.add_argument('-p', '--prefix', default=None,
                     help='Add a prefix to the file name (making new ones?). (default: %(default)s).')
 
 parser.add_argument('-w', '--smooth', action='store_true',
