@@ -63,8 +63,8 @@ rule stack_psf:
 #        #4 # Normal
 #        14 # MDS fields
     resources:
-      #  mem_mb = 37000  # For AWES
-        mem_mb = 185000  # For MDS 
+        mem_mb = 38000  # For AWES
+        # mem_mb = 185000  # For MDS 
     shell:
         "python3 /mnt/scratch/stuff/aper_cube_stack/psf_stack.py -f "+FIELD+" -b {wildcards.bm} -c "+CUBE
 
