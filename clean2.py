@@ -322,11 +322,13 @@ for b in beams:
 
             # Output what exactly is being used to clean the data
             print("\t{}".format(maskfits))
-            m = pyfits.open(maskfits)
-            # Get channels to clean:
-            chan_mask = np.sum(m[0].data, axis=(1, 2))
-            chan = np.where(chan_mask > 0)[0]
-            m.close()
+            # # Deprecated (now add a single pixel to every channel in src/regridmask.py so clean everything for smoothing later)
+            # m = pyfits.open(maskfits)
+            # # Get channels to clean:
+            # chan_mask = np.sum(m[0].data, axis=(1, 2))
+            # chan = np.where(chan_mask > 0)[0]
+            # m.close()
+            chan = np.arange(nchan)
 
             # Delete any pre-existing Miriad files.
             os.system('rm -rf model_'+str(b).zfill(2)+'* beam_'+str(b).zfill(2)+'* map_'+str(b).zfill(2) +
