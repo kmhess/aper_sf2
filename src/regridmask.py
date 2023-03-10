@@ -28,6 +28,7 @@ with fits.open(incube) as cube:
     cubehead = cube[0].header
 
 beam = incube.split('_')[1][-2:]
+beam = incube.split('/')[-1].split('_')[1][-2:]
 postGridMask = preGridMask.replace('.fits', '{}_regrid.fits'.format(beam))
 
 '''
@@ -103,6 +104,8 @@ with fits.open('{}'.format(postGridMask), mode='update') as hdul:
             if cent > axDict[i][1]/2+1:
                 hdul[0].header['CRPIX'+i] = hdul[0].data.shape[axDict[i][0]]/2+1
 
+    # Add a single pixel to every channel so every channel is cleaned (matched edits in ../clean2.py)
+    hdul[0].data[:,0,0] = 1.0
     hdul[0].data = np.around(hdul[0].data.astype(np.float32)).astype(np.int16)
     try:
         del hdul[0].header['EN']
