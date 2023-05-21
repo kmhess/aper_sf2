@@ -58,7 +58,7 @@ parser.add_argument('-r', '--threshold', default='1.0', type=float,
 parser.add_argument('-i', '--iterations', default='3', type=int,
                     help='Specify the number of iterations for mask dilation (default: %(default)s).')
 
-parser.add_argument('-j', "--njobs", default=18,
+parser.add_argument('-j', "--njobs", default=18, type=int,
                     help="Number of jobs to run in parallel (default: %(default)s) tested on happili-05.")
 
 parser.add_argument('-f', "--filename", default=None,

@@ -57,7 +57,7 @@ parser.add_argument('-s', '--sources', default='all',
                     help='Specify the sources included in the binary mask.'
                          ' (default: %(default)s).')
 
-parser.add_argument('-j', "--njobs",
+parser.add_argument('-j', "--njobs", type=int,
                     help="Number of jobs to run in parallel (default: %(default)s) tested on happili-05.",
                     default=18)
 
