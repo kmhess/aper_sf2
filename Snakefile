@@ -22,7 +22,7 @@ rule all:
 
 checkpoint stack_obs:
     output:
-        directory(FIELD)#"FIELD")
+        directory(FIELD)
     shell:
         "python3 /mnt/scratch/stuff/aper_cube_stack/cube_stack.py -f {output} -b 0-39 -c "+CUBE
 
@@ -55,10 +55,10 @@ rule make_mosaic:
         "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_weights.fits"
     run:
         input = list(input)
-        #mos_params = " -t ".join([i.split("/")[1] for i in input if "image" in i])
         mos_params = " ".join([i.split("/")[1] for i in input if "image" in i])
-        #os.system('MosaicSteward -m spectral -c 0.1 -n '+FIELD+'_HIcube2 -i '+FIELD+' -o mos_'+FIELD+' -t ' + mos_params + ' -r')
-        os.system('mosaic-queen -mc 0.1 -n '+FIELD+'_HIcube'+CUBE+' -i '+FIELD+' -o mos_'+FIELD+' -t '+mos_params+' -f')
+        os.system('mosaic-queen -mc 0.1 -n '+FIELD+'_HIcube'+CUBE+' -i '+FIELD+' -o mos_'+FIELD+' -t '+mos_params+' -r')
+        os.system('rm -rf mos_'+FIELD+'/*imageR*')
+        os.system('rm -rf mos_'+FIELD+'/*pbR*')
 
 rule run_sofia:
     input:
@@ -75,3 +75,4 @@ rule run_sofia:
         "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_filtered_spline.fits"
     shell:
         "python3 /mnt/scratch/stuff/aper_sf2/sourcefinding.py -t "+FIELD+" -c "+CUBE+" -m"
+

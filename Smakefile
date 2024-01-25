@@ -13,6 +13,22 @@ rule all:
     input:
         "mos_" + FIELD + "/sm_rename_cube"+CUBE+".txt"
 
+rule make_bin_mask:
+    input:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask.fits"
+    output:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin.fits"
+    shell:
+        "python3 /mnt/scratch/stuff/aper_sf2/src/binary_mask.py -t "+FIELD+" -c "+CUBE
+
+rule dilate_mask:
+    input:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin.fits"
+    output:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin_dil.fits"
+    shell:
+        "python3 /mnt/scratch/stuff/aper_sf2/src/dilate_binmask.py -t "+FIELD+" -c "+CUBE
+
 rule smooth:
     input:
         FIELD+"/HI_B0{bm}_cube"+CUBE+"_spline_clean_image.fits"
@@ -20,6 +36,8 @@ rule smooth:
         FIELD+"/HI_B0{bm}_cube"+CUBE+"_spline_clean_smooth_image.fits"
     singularity:
         "/mnt/software/containers/apercal.sif"
+    # threads:
+    #     11
     shell:
         "python ../scratch/stuff/aper_sf2/src/smooth_wa.py -t "+FIELD+" -b {wildcards.bm} -c "+CUBE
 
@@ -31,6 +49,7 @@ rule generate_new_pb:
         FIELD+"/HI_B0{bm}_cube"+CUBE+"_spline_clean_smooth_pb.fits"
     shell:
         "python3 /mnt/scratch/stuff/aper_cube_stack/modules/regrid_aperpb.py -t {input[0]} -b {wildcards.bm} -p /mnt/scratch/apertif/cbeams/"
+        # shell("mv {input[0]} {output}")
 
 def aggregate_input(wildcards):
     beams, = glob_wildcards(FIELD+"/HI_B0{xx}_cube"+CUBE+"_spline_clean_image.fits")
@@ -51,7 +70,11 @@ checkpoint make_mosaic3:
         temp("mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_fields_regrid"),
         temp("mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_fields_regrid.tbl"),
         temp("mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_beams_regrid"),
-        temp("mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_beams_regrid.tbl")
+        temp("mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_beams_regrid.tbl"),
+        #temp("mos_"+FIELD+"/HI_B0{beam}_cube"+CUBE+"_spline_clean_imageR.fits"),
+        #temp("mos_"+FIELD+"/HI_B0{beam}_cube"+CUBE+"_spline_clean_imageR_area.fits"),
+        #temp("mos_"+FIELD+"/HI_B0{beam}_cube"+CUBE+"_spline_clean_pbR.fits"),
+        #temp("mos_"+FIELD+"/HI_B0{beam}_cube"+CUBE+"_spline_clean_pbR_area.fits")
     run:
         input = list(input)
         mos_params = " ".join([i.split("/")[1] for i in input if "spline_clean_smooth_image" in i])
@@ -86,13 +109,14 @@ rule generate_full_spec:
         "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_cat.xml"
     output:
         "mos_"+FIELD+"/sm_specfull_cube"+CUBE+".txt"
-    shell:
+    shell:   # ADD PREFIX OPTION HERE!  Done?  Unnecessary?
         "python3 ../scratch/stuff/aper_sf2/src/get_specfull.py -t "+FIELD+" -c "+CUBE+" -p sm; "
         "touch {output}"
 
 rule run_sip:
     input:
         "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_cat.xml",
+        # "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image.fits",
         "mos_"+FIELD+"/sm_specfull_cube"+CUBE+".txt"
     output:
         "mos_"+FIELD+"/sm_sip_cube"+CUBE+".txt"
@@ -115,6 +139,6 @@ rule rename_pngs:
         "mos_" + FIELD + "/sm_sip_cube"+CUBE+"_edit.txt"
     output:
         "mos_" + FIELD + "/sm_rename_cube"+CUBE+".txt"
-    shell:
+    shell:  # ADD PREFIX OPTION HERE! Done
         "python3 ../scratch/stuff/aper_sf2/src/rename_combo.py -t " + FIELD + " -c "+CUBE+" -p sm -w; "
         "touch {output}"

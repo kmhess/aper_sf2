@@ -33,10 +33,10 @@ rule make_mosaic2:
         temp("mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_fields_regrid.tbl"),
         temp("mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_beams_regrid"),
         temp("mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_beams_regrid.tbl"),
-        # temp("mos_"+FIELD+"/HI_B0{beam}_cube"+CUBE+"_spline_clean_imageR.fits"),
-        # temp("mos_"+FIELD+"/HI_B0{beam}_cube"+CUBE+"_spline_clean_imageR_area.fits"),
-        # temp("mos_"+FIELD+"/HI_B0{beam}_cube"+CUBE+"_spline_clean_pbR.fits"),
-        # temp("mos_"+FIELD+"/HI_B0{beam}_cube"+CUBE+"_spline_clean_pbR_area.fits")
+        #temp("mos_"+FIELD+"/HI_B0{beam}_cube"+CUBE+"_spline_clean_imageR.fits"),
+        #temp("mos_"+FIELD+"/HI_B0{beam}_cube"+CUBE+"_spline_clean_imageR_area.fits"),
+        #temp("mos_"+FIELD+"/HI_B0{beam}_cube"+CUBE+"_spline_clean_pbR.fits"),
+        #temp("mos_"+FIELD+"/HI_B0{beam}_cube"+CUBE+"_spline_clean_pbR_area.fits")
     run:
         input = list(input)
         mos_params = " ".join([i.split("/")[1] for i in input if "spline_clean_image" in i])

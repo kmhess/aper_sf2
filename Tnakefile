@@ -18,6 +18,10 @@ rule make_bin_mask:
         "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask.fits"
     output:
         "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin.fits"
+    threads:
+        18
+    resources:
+        mem_mb = 5000
     shell:
         "python3 /mnt/scratch/stuff/aper_sf2/src/binary_mask.py -t "+FIELD+" -c "+CUBE
 
@@ -26,6 +30,10 @@ rule dilate_mask:
         "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin.fits"
     output:
         "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin_dil.fits"
+    threads:
+        18
+    resources:
+        mem_mb = 5000
     shell:
         "python3 /mnt/scratch/stuff/aper_sf2/src/dilate_binmask.py -t "+FIELD+" -c "+CUBE
 
@@ -49,6 +57,8 @@ rule generate_new_pb:
         "/mnt/scratch/apertif/cbeams/{bm}_gp_avg_orig.fits"
     output:
         FIELD+"/HI_B0{bm}_cube"+CUBE+"_spline_clean_pb.fits"
+    threads:
+        1
     run:
         shell("python3 /mnt/scratch/stuff/aper_cube_stack/modules/regrid_aperpb.py -t {input[0]} -b {wildcards.bm} -p /mnt/scratch/apertif/cbeams/")
         shell("mv "+FIELD+"/HI_B0{wildcards.bm}_cube"+CUBE+"_pb.fits {output}")
@@ -58,13 +68,11 @@ rule stack_psf:
         FIELD+"/HI_B0{bm}_cube"+CUBE+"_image.fits"
     output:
         FIELD+"/HI_B0{bm}_cube"+CUBE+"_psf.fits"
-#    threads:
-#        #2
-#        #4 # Normal
-#        14 # MDS fields
+    threads:
+        4   # This is a trick to not exceed the total memory (see below; sad face)
     resources:
-        mem_mb = 38000  # For AWES
-        # mem_mb = 185000  # For MDS 
+        mem_mb = 30000 # For AWES;  MEMORY PER CORE NOT TOTAL!!!
+      #  mem_mb = 185000  # For MDS 
     shell:
         "python3 /mnt/scratch/stuff/aper_cube_stack/psf_stack.py -f "+FIELD+" -b {wildcards.bm} -c "+CUBE
 
