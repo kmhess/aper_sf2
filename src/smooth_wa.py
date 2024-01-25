@@ -57,8 +57,12 @@ def run(i):
         convol.out = 'smooth_{:02}_00_'.format(b) + str(chan[i]).zfill(4)
         convol.options = 'final'
         convol.go()
+        bmaj[i] = 40./3600.
+        bmin[i] =40./3600.
+        bpa[i] = 0.0
     except RuntimeError:
         print("\tProblems CONVOLVEing data for channel {}.".format(chan[i]))
+        os.system('cp -r map_{:02}_00_{:04} smooth_{:02}_00_{:04}'.format(b,chan[i],b,chan[i]))
         return
 
     try:
@@ -217,15 +221,16 @@ for b in beams:
                 new_smoothcube[0].header['HISTORY'] = 'Individual images reassembled using aper_sf2/smooth_wa.py by KMHess'
 
                 print("[SMOOTH_WA] Updating median clean beam properties to primary header.")
+                med_bmaj, med_bmin, med_bpa = np.median(bmaj), np.median(bmin), np.median(bpa)
                 if len(chan) > 0:
-                    new_smoothcube[0].header['BMAJ'] = 40./3600.
-                    new_smoothcube[0].header['BMIN'] = 40./3600.
-                    new_smoothcube[0].header['BPA'] = 0.
+                    new_smoothcube[0].header.set('BMAJ', med_bmaj, 'median clean beam bmaj')
+                    new_smoothcube[0].header.set('BMIN', med_bmin, 'median clean beam bmin')
+                    new_smoothcube[0].header.set('BPA', med_bpa, 'median clean beam pa')
 
                     print("[SMOOTH_WA] Updating channel clean beam properties to BEAMS extension table.")
-                    new_smoothcube[1].data['BMAJ'][:] = 40./3600.
-                    new_smoothcube[1].data['BMIN'][:] = 40./3600.
-                    new_smoothcube[1].data['BPA'][:] = 0.
+                    new_smoothcube[1].data['BMAJ'][:] = bmaj
+                    new_smoothcube[1].data['BMIN'][:] = bmin
+                    new_smoothcube[1].data['BPA'][:] = bpa
                 else:
                     print("[SMOOTH_WA] No channels cleaned; no beam info being written to header.")
 
@@ -247,14 +252,3 @@ for b in beams:
 
     
 print("[SMOOTH_WA] Done.\n")
-
-
-
-# Controlled through snakefile:
-# Recombine in mosaic
-
-# Dilate binary mask (again) as necessary
-
-# Run SoFiA to generate smoothed projects
-
-# Run SIP to create images
