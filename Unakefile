@@ -102,4 +102,5 @@ rule generate_psf_stats:
     output:
         "mos_"+FIELD+"/"+FIELD+"_beams_cube"+CUBE+".png"
     shell:
+        "python3 ../scratch/stuff/aper_sf2/src/record_beams.py -t "+FIELD+" -c "+CUBE
         "python3 ../scratch/stuff/aper_sf2/src/plot_beams.py -t "+FIELD+" -c "+CUBE
