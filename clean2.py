@@ -219,7 +219,7 @@ for b in beams:
 
         line_cube = cube_name + '.fits'
         beam_cube = beam_name + '_full.fits'   # Update to the expanded beam (deleted later to save space)
-        maskfits = '/mnt/data/' + mask_loc + taskid + '_HIcube' + str(c) + '_image_sofiaFS_mask_bin_dil' + \
+        maskfits = mask_loc + taskid + '_HIcube' + str(c) + '_image_sofiaFS_mask_bin_dil' + \
                    str(b).zfill(2) + '_regrid.fits'
         splinefits = cube_name[:-6] + '_spline.fits'
 
