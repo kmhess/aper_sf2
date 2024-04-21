@@ -540,6 +540,6 @@ for b in beams:
                       '* image_'+str(b).zfill(2)+'* mask_'+str(b).zfill(2)+'* residual_'+str(b).zfill(2)+'*')
             os.system('rm -rf ' + beam_cube)
         else:
-            print("no mask?")
+            print("no mask for beam {}?".format(b))
 
 print("[CLEAN2] Done.\n")
