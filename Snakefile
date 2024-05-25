@@ -11,14 +11,12 @@ wildcard_constraints:
 
 rule all:
     input:
-        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_filtered.fits",
         "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_cat.txt",
         "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_cat.xml",
         "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask-2d.fits",
         "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask.fits",
         "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_rel.eps",
-        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_skellam.eps",
-        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_filtered_spline.fits"
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_skellam.eps"
 
 checkpoint stack_obs:
     output:
@@ -65,14 +63,12 @@ rule run_sofia:
         "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image.fits",
         "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_noise.fits"
     output:
-        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_filtered.fits",
         "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_cat.txt",
         "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_cat.xml",
         "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask-2d.fits",
         "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask.fits",
         "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_rel.eps",
-        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_skellam.eps",
-        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_filtered_spline.fits"
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_skellam.eps"
     shell:
         "python3 /mnt/scratch/stuff/aper_sf2/sourcefinding.py -t "+FIELD+" -c "+CUBE+" -m"
 
