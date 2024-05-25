@@ -25,6 +25,8 @@ def filter2d(loc, taskid, beam, cube, mosaic=False, overwrite=False):
         data = fits.getdata(filter3d_name)[1, :, :]
         if np.all(data == np.nan):
             data = fits.getdata(filter3d_name)[-10, :, :]
+            if np.all(data == np.nan):
+                data = fits.getdata(filter3d_name)[-500, :, :]
 
         # Assign a positive value to the filter and set everything else to nan:
         filter2d = np.full(data.shape, np.nan)
