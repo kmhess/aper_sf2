@@ -23,9 +23,9 @@ def filter2d(loc, taskid, beam, cube, mosaic=False, overwrite=False):
         # Get header as template:
         header = fits.getheader(mask2d_name)
         data = fits.getdata(filter3d_name)[1, :, :]
-        if np.all(data == np.nan):
+        if np.all(np.isnan(data)):
             data = fits.getdata(filter3d_name)[-10, :, :]
-            if np.all(data == np.nan):
+            if np.all(np.isnan(data)):
                 data = fits.getdata(filter3d_name)[-500, :, :]
 
         # Assign a positive value to the filter and set everything else to nan:
