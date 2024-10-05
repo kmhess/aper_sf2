@@ -36,4 +36,7 @@ for b in range(40)[:1]:
         if os.path.isfile(targ_filename):
             print(targ_filename)
             ascii.write(data, targ_filename, overwrite=True)
+        # else:
+        #     os.system('touch {}'.format(targ_filename))
+        #     ascii.write(data, targ_filename, overwrite=True)
 
