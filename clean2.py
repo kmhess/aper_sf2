@@ -232,7 +232,7 @@ for b in beams:
 
         new_cleanfits = outcube + '_clean_image.fits'
 
-        if os.path.isfile(maskfits) | (not os.path.isfile(new_cleanfits)):
+        if os.path.isfile(maskfits) & (not os.path.isfile(new_cleanfits)):
 
             mask_expr = '"(<mask_' + str(b).zfill(2) + '_sofia>.eq.-1).or.(<mask_' + str(b).zfill(2) + '_sofia>.ge.0.01)"'
 
