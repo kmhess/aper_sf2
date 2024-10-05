@@ -22,7 +22,7 @@ args = parser.parse_args()
 
 ###################################################################
 
-for b in range(40)[:1]:
+for b in range(40):
     filename = args.taskid + '/HI_B0'+str(b).zfill(2)+'_cube' + args.cubes + '_spline_clean_image.fits'
     targ_filename = args.taskid + '/HI_B0'+str(b).zfill(2)+'_cube' + args.cubes + '.txt'
     if os.path.isfile(filename):
@@ -36,7 +36,6 @@ for b in range(40)[:1]:
         if os.path.isfile(targ_filename):
             print(targ_filename)
             ascii.write(data, targ_filename, overwrite=True)
-        # else:
-        #     os.system('touch {}'.format(targ_filename))
-        #     ascii.write(data, targ_filename, overwrite=True)
-
+        else:
+            os.system('touch {}'.format(targ_filename))
+            ascii.write(data, targ_filename, overwrite=True)

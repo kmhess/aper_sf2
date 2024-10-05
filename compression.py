@@ -1,9 +1,12 @@
 from glob import glob
 import os
 
-weights_cubes = glob('/mnt/data/mos_*/*weights.fits')
-noise_cubes = glob('/mnt/data/mos_*/*noise.fits')
-mask_cubes = glob('/mnt/data/mos_*/*mask.fits')
+weights_cubes = glob('/mnt/data/mos_S*/*weights.fits')
+noise_cubes = glob('/mnt/data/mos_S*/*noise.fits')
+mask_cubes = glob('/mnt/data/mos_S*/*mask.fits')
+
+#print(weights_cubes[:5])
+#print(mask_cubes[:5])
 
 for w in weights_cubes:
     if not os.path.isfile(w + '.fz') & os.path.isfile(w):
@@ -21,10 +24,11 @@ for n in noise_cubes:
         os.system('rm -r {}'.format(n))
         print('rm -r {}'.format(n))
 
-for m in mask_cubes:
-    if not os.path.isfile(m + '.fz') & os.path.isfile(m):
-        os.system('fpack {}'.format(m))
-        print('fpack {}'.format(m))
-    if os.path.isfile(m + '.fz') & os.path.isfile(m):
-        os.system('rm -r {}'.format(m))
-        print('rm -r {}'.format(m))
+#for m in mask_cubes:
+#    if not os.path.isfile(m + '.fz') & os.path.isfile(m):
+#        os.system('fpack {}'.format(m))
+#        print('fpack {}'.format(m))
+#    if os.path.isfile(m + '.fz') & os.path.isfile(m):
+#        os.system('rm -r {}'.format(m))
+#        print('rm -r {}'.format(m))
+
