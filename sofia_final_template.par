@@ -38,7 +38,7 @@
 
 pipeline.verbose           =  false
 pipeline.pedantic          =  true     # Keep this true!  Detects new *big* features in SoFiA
-pipeline.threads           =  20
+pipeline.threads           =  10
 
 
 # Input
