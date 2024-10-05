@@ -223,7 +223,16 @@ for b in beams:
                    str(b).zfill(2) + '_regrid.fits'
         splinefits = cube_name[:-6] + '_spline.fits'
 
-        if os.path.isfile(maskfits):
+        if args.nospline:
+            dirty_cube = line_cube
+            outcube = line_cube[:-5]
+        else:
+            dirty_cube = splinefits
+            outcube = splinefits[:-5]  # + '_rep'
+
+        new_cleanfits = outcube + '_clean_image.fits'
+
+        if os.path.isfile(maskfits) | (not os.path.isfile(new_cleanfits)):
 
             mask_expr = '"(<mask_' + str(b).zfill(2) + '_sofia>.eq.-1).or.(<mask_' + str(b).zfill(2) + '_sofia>.ge.0.01)"'
 
@@ -367,14 +376,6 @@ for b in beams:
                 print("[CLEAN2] Initialize clean, model, and residual cubes")
             else:
                 print("[CLEAN2] Initialize clean cube")
-            if args.nospline:
-                dirty_cube = line_cube
-                outcube = line_cube[:-5]
-            else:
-                dirty_cube = splinefits
-                outcube = splinefits[:-5]  # + '_rep'
-
-            new_cleanfits = outcube + '_clean_image.fits'
             os.system('cp {} {}'.format(dirty_cube, new_cleanfits))
             print("\t{}".format(new_cleanfits))
             new_cleancube = pyfits.open(new_cleanfits, mode='update')
@@ -539,6 +540,8 @@ for b in beams:
             os.system('rm -rf model_'+str(b).zfill(2)+'* beam_'+str(b).zfill(2)+'* map_'+str(b).zfill(2) +
                       '* image_'+str(b).zfill(2)+'* mask_'+str(b).zfill(2)+'* residual_'+str(b).zfill(2)+'*')
             os.system('rm -rf ' + beam_cube)
+        elif os.path.isfile(new_cleanfits):
+            print("Clean fits already exists for beam {}.".format(b))
         else:
             print("no mask for beam {}?".format(b))
 
