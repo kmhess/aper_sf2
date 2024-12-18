@@ -20,8 +20,8 @@ def make_param_file(loc_dir=None, cube_name=None, cube=None, mosaic=False):
     new_paramfile = loc_dir + 'sofia_parameter.par'
     if mosaic == True:
         param_template = dir_name + '/mosaic_parameter_template.par'
-        new_paramfile = loc_dir + 'mosaic_parameter.par'
-    outlog = loc_dir + 'sourcefinding.out'
+        new_paramfile = loc_dir + 'mosaic{}_parameter.par'.format(cube)
+    outlog = loc_dir + 'sourcefinding{}.out'.format(cube)
 
     # Edit parameter file (remove lines that need editing)
     os.system('grep -vwE "(input.data)" ' + param_template + ' > ' + new_paramfile)
@@ -46,8 +46,8 @@ def make_param_file(loc_dir=None, cube_name=None, cube=None, mosaic=False):
     # if mosaic:                          # FILTERED SPLINE ALREADY HAS NOISE CORRECTION APPLIED!
     #     os.system('echo "input.noise                =  ' + noisefits + '" >> ' + new_paramfile)  #
     if cube == 3:
-        os.system('echo "flag.region                =  0,661,0,661,375,601" >> ' + new_paramfile)
-        os.system('echo "linker.maxSizeXY           =  250" >> ' + new_paramfile)
+        os.system('echo "flag.region                =  0,2600,0,2000,375,601" >> ' + new_paramfile)
+        os.system('echo "linker.maxSizeXY           =  280" >> ' + new_paramfile)
         os.system('echo "linker.maxSizeZ            =  385" >> ' + new_paramfile)
 
     return new_paramfile, outlog
@@ -159,20 +159,21 @@ for b in beams:
         # splinefits = loc + cube_name + '_spline.fits'                     #
         # Output exactly where sourcefinding is starting
         print('\t' + sourcefits)
+        new_filter_par = 'filtering{}.par'.format(c)
 
         # Check to see if the continuum filtered file exists.  If not, make it  with SoFiA-2
         if (not overwrite) & (os.path.isfile(filteredfits) | os.path.isfile(splinefits)):
             print("[SOURCEFINDING] Continuum filtered file exists and will not be overwritten.")
         elif os.path.isfile(sourcefits):
             print("[SOURCEFINDING] Making continuum filtered file.")
-            os.system('grep -vwE "(input.data)" ' + dir_name + '/filtering.par > ' + loc + 'filtering.par')
+            os.system('grep -vwE "(input.data)" ' + dir_name + '/filtering.par > ' + loc + new_filter_par)
             if noisefits:
-                os.system('grep -vwE "(input.noise)" ' + loc + 'filtering.par' + ' > temp && mv temp ' +
-                          loc + 'filtering.par')
-            os.system('echo "input.data                 =  ' + sourcefits + '" >> ' + loc + 'filtering.par')
+                os.system('grep -vwE "(input.noise)" ' + loc + new_filter_par + ' > temp && mv temp ' +
+                          loc + new_filter_par)
+            os.system('echo "input.data                 =  ' + sourcefits + '" >> ' + loc + new_filter_par)
             if noisefits:
-                os.system('echo "input.noise                =  ' + noisefits + '" >> ' + loc + 'filtering.par')
-            os.system('sofia ' + loc + 'filtering.par >> test.log')
+                os.system('echo "input.noise                =  ' + noisefits + '" >> ' + loc + new_filter_par)
+            os.system('sofia ' + loc + new_filter_par + ' >> test.log')
         else:
             if b == 40:
                 print("\tFull mosaic for field {} Cube {} is not present in this directory.".format(taskid, c))
