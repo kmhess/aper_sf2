@@ -11,7 +11,7 @@ wildcard_constraints:
 
 rule all:
     input:
-        expand(FIELD + "/HI_B0{beam}_cube"+CUBE+".txt", beam=beams)
+        expand("mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin_dil{beam}_regrid.fits", beam=beams)
 
 rule make_bin_mask:
     input:
@@ -86,10 +86,6 @@ checkpoint f:
         "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin_dil{beam}_regrid.fits"
     output:
         FIELD + "/HI_B0{beam}_cube"+CUBE+".txt"
-        # protected(FIELD+"/HI_B0{beam}_cube"+CUBE+"_spline.fits"),
-        # protected(FIELD+"/HI_B0{beam}_cube"+CUBE+"_spline_clean_image.fits")
-    singularity:
-        "/mnt/software/containers/apercal.sif"
     threads:
         11
     shell:
