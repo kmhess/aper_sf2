@@ -1,2 +1,5 @@
-FIELD: S1432+3848
-CUBE: 1
+FIELD: S1421+5324
+CUBE: 2
+PATH_TO_DATA: /mnt/data
+PATH_TO_SOFTWARE: /mnt/scratch/stuff
+PATH_TO_CBEAMS: /mnt/scratch/apertif/cbeams
