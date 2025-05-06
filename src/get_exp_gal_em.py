@@ -1,5 +1,5 @@
 """
-TNH, 04/2025
+TNH, 05/2025
 
 Script with function that finds v_min and v_max velocity ranges for Galactic emission for a given set of Galactic l and b coordinates.
 Also has a helper function which returns an l and b value using the RA/DEC from the spline fits cube header.
