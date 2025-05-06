@@ -2,14 +2,14 @@
 TNH, 04/2025
 
 Script with function that finds v_min and v_max velocity ranges for Galactic emission for a given set of Galactic l and b coordinates.
-Also has a helper function which returns a (not very precise) l and b value from the name of the field. (For more precise values, can code up a way to access cube header instead but this is better in case cube is not accessible).
+Also has a helper function which returns an l and b value using the RA/DEC from the spline fits cube header.
 
 Credit: adapted from Betsey Adams' deviation velocity code, based on Chapter 2.1 of High-Velocity Clouds by van Woerden, Wakker, Schwarz and de Boer (2005) (https://www.cita.utoronto.ca/~amarchal/pdf/High-Velocity-Clouds.pdf)
 
 Usage:
 1. from get_exp_gal_em import get_lb, get_gal_vel
-2. l, b = get_lb(<field_name>)
-    e.g., l, b = get_lb('S1044+5550')
+2. l, b = get_lb(<splinefits>)
+    e.g., l, b = get_lb('mos_S1044+5550/S1044+5550_HIcube3_image_filtered_spline.fits')
 3. get_gal_vel(l, b)
 """
 
@@ -20,19 +20,39 @@ from astropy.io import ascii
 from astropy import coordinates as coord
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from astropy.io import fits
 
-def get_lb(field):
-    #extracting rough RA, DEC from field name and creating astropy SkyCoord
-     if len(field.split('+'))>1:
-         field_ra = field.split('+')[0]
-         field_dec = field.split('+')[1]
-         field_coord = SkyCoord('{hour}h{minute}m00.0s'.format(hour=field_ra[1:3],minute=field_ra[3:5]),
-                                '+{d}d{minute}m00.0s'.format(d=field_dec[0:2],minute=field_dec[2:4]))
-     else:
-         field_ra = field.split('-')[0]
-         field_dec = (field.split('-')[1])
-         field_coord = SkyCoord('{hour}h{minute}m00.0s'.format(hour=field_ra[1:3],minute=field_ra[3:5]),
-                                '-{d}d{minute}m00.0s'.format(d=field_dec[0:2],minute=field_dec[2:4]))
+def get_lb(splinefits):
+    #reading in cube header
+    header = fits.getheader(splinefits)
+    
+    #first trying to extract coordinate frame from header, code from https://github.com/kmhess/SoFiA-image-pipeline/blob/master/src/modules/functions.py
+    equinox = header['EQUINOX']
+        if equinox < 1984.0:
+            equinox = 'B' + str(equinox)
+            frame = 'fk4'
+        else:
+            equinox = 'J' + str(equinox)
+            frame = 'fk5'
+        print("\tFound {} equinox in header.".format(equinox))
+    except KeyError:
+        try:
+            equinox = header['EPOCH']
+            if equinox < 1984.0:
+                equinox = 'B' + str(equinox)
+                frame = 'fk4'
+            else:
+                equinox = 'J' + str(equinox)
+                frame = 'fk5'
+            print("\tWARNING: Using deprecated EPOCH in header for equinox: {}.".format(equinox))
+        except KeyError:
+            print("\tWARNING: No equinox information in header; assuming ICRS frame.")
+            equinox = None
+            frame = 'icrs'
+    
+     #extracting RA, DEC from splinefits cube header and creating astropy SkyCoord
+     field_coord = SkyCoord(header['CRVAL1']*u.deg, header['CRVAL2']*u.deg, frame=frame)
+    
      #transforming to Galactic coordinates
      field_gal_coord = field_coord.transform_to('galactic')
      
