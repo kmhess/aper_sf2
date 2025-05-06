@@ -27,7 +27,8 @@ def get_lb(splinefits):
     header = fits.getheader(splinefits)
     
     #first trying to extract coordinate frame from header, code from https://github.com/kmhess/SoFiA-image-pipeline/blob/master/src/modules/functions.py
-    equinox = header['EQUINOX']
+    try:
+        equinox = header['EQUINOX']
         if equinox < 1984.0:
             equinox = 'B' + str(equinox)
             frame = 'fk4'
@@ -50,14 +51,14 @@ def get_lb(splinefits):
             equinox = None
             frame = 'icrs'
     
-     #extracting RA, DEC from splinefits cube header and creating astropy SkyCoord
-     field_coord = SkyCoord(header['CRVAL1']*u.deg, header['CRVAL2']*u.deg, frame=frame)
+    #extracting RA, DEC from splinefits cube header and creating astropy SkyCoord
+    field_coord = SkyCoord(header['CRVAL1']*u.deg, header['CRVAL2']*u.deg, frame=frame)
     
-     #transforming to Galactic coordinates
-     field_gal_coord = field_coord.transform_to('galactic')
+    #transforming to Galactic coordinates
+    field_gal_coord = field_coord.transform_to('galactic')
      
-     #returning Galactic coordinates
-     return field_gal_coord.l, field_gal_coord.b
+    #returning Galactic coordinates
+    return field_gal_coord.l, field_gal_coord.b
 
 def get_gal_vel(l, b):
     #checking if l, b are array of values or single value
