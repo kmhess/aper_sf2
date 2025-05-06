@@ -1,5 +1,5 @@
 """
-TNH, 04/2025
+TNH, 05/2025
 
 Script to get a range of channels with high Galactic HI
 reads in the data cube of the field, measures and plots RMS noise in each channel, 
