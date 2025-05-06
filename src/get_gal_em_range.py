@@ -11,7 +11,7 @@ The galactic_emission_vel_ranges.py script should be in the same directory.
 
 Usage:
 1. from get_gal_em_range import find_rms_range
-2. channel_range = find_rms_range(<loc_dir>, <field_name>)
+2. channel_range = find_rms_range(<loc_dir>, <field_name>, <splinefits>)
 """
 
 import matplotlib.pyplot as plt
@@ -79,7 +79,7 @@ def vel2freq(velocities):
     return frequencies.value
 
 #plots RMS noise as a function of channel and channels with high RMS in the Galactic emission region to exclude
-def plot_rms_channel(loc_dir, field_name, rms_table, chan_range, high_rms_mask):
+def plot_rms_channel(loc_dir, field_name, splinefits, rms_table, chan_range, high_rms_mask):
     #plotting RMS vs. frequency/velocity
     fig, ax = plt.subplots()
 
@@ -107,7 +107,7 @@ def plot_rms_channel(loc_dir, field_name, rms_table, chan_range, high_rms_mask):
         ax.vlines(chan2freq(chan_range[1]).value, 0.975,1.1, color='green', linestyles='--', alpha=0.3)
     
     #plotting expected velocity ranges from Galactic emission model
-    l, b = get_lb(field_name, splinefits)
+    l, b = get_lb(splinefits)
     exp_vel = get_gal_vel(l, b)
     ax.fill_betweenx([0.975,1.1],
                      vel2freq(exp_vel[0]), vel2freq(exp_vel[1]), color='pink', 
@@ -178,7 +178,7 @@ def find_rms_range(loc_dir=None, field_name=None, splinefits=None):
         chan_range = (0,0)
 
     #calculating expected velocity ranges from Galactic emission model
-    l, b = get_lb(field_name, splinefits)
+    l, b = get_lb(splinefits)
     exp_vel = get_gal_vel(l, b)
 
     #updating channel range based on expected ranges
@@ -188,7 +188,7 @@ def find_rms_range(loc_dir=None, field_name=None, splinefits=None):
                         max(np.append(chan_range,exp_chan_range)))
 
     #plotting
-    plot_rms_channel(loc_dir, field_name, rms_table, final_chan_range, high_rms_mask)
+    plot_rms_channel(loc_dir, field_name, splinefits, rms_table, final_chan_range, high_rms_mask)
         
     #returning endpoints of the range of high RMS channels
     return int(final_chan_range[0]), int(final_chan_range[1])
