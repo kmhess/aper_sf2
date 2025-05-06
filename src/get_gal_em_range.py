@@ -107,7 +107,7 @@ def plot_rms_channel(loc_dir, field_name, rms_table, chan_range, high_rms_mask):
         ax.vlines(chan2freq(chan_range[1]).value, 0.975,1.1, color='green', linestyles='--', alpha=0.3)
     
     #plotting expected velocity ranges from Galactic emission model
-    l, b = get_lb(field_name)
+    l, b = get_lb(field_name, splinefits)
     exp_vel = get_gal_vel(l, b)
     ax.fill_betweenx([0.975,1.1],
                      vel2freq(exp_vel[0]), vel2freq(exp_vel[1]), color='pink', 
@@ -126,7 +126,7 @@ def plot_rms_channel(loc_dir, field_name, rms_table, chan_range, high_rms_mask):
 
 
 #finds and plots RMS noise as a function of channel in the cube, along with selected channels with high RMS in the Galactic emission region to exclude
-def find_rms_range(loc_dir=None, field_name=None):
+def find_rms_range(loc_dir=None, field_name=None, splinefits=None):
     #checking if rms is on file. If not, calculates and saves it.
     rms_path = loc_dir + '{field_name}_RMS_mean.txt'.format(field_name = field_name)
     if os.path.exists(rms_path):
@@ -136,7 +136,7 @@ def find_rms_range(loc_dir=None, field_name=None):
     else: 
         print('RMS file not found. Calculating and saving RMS.')
         #reading in cube
-        filtered_cube = SpectralCube.read(loc_dir +'/{field_name}_HIcube3_image_filtered_spline.fits'.format(field_name = field_name))
+        filtered_cube = SpectralCube.read(splinefits)
         filtered_cube.allow_huge_operations=True
         #calculating rms and mean
         rms = np.std(filtered_cube, axis=(1, 2))
@@ -178,7 +178,7 @@ def find_rms_range(loc_dir=None, field_name=None):
         chan_range = (0,0)
 
     #calculating expected velocity ranges from Galactic emission model
-    l, b = get_lb(field_name)
+    l, b = get_lb(field_name, splinefits)
     exp_vel = get_gal_vel(l, b)
 
     #updating channel range based on expected ranges
