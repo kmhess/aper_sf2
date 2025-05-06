@@ -286,15 +286,12 @@ for b in beams:
                 print("\tBeam {:02} Cube {} is not present in this directory.".format(b, c))
             continue
 
-        #if mosaic, reads in or calculates a channel range to exclude
-        if args.mosaic == True:
-            # Reads in range of Galactic HI emission channels to exclude, calculates if unspecified:
-            if args.chanrange != None:
-                chan_range = args.chanrange.split('-')
-            else:
-                chan_range = find_rms_range(loc_dir=loc, field_name=taskid, splinefits=splinefits)
+        # Reads in range of Galactic HI emission channels to exclude, calculates if unspecified:
+        if args.chanrange != None:
+            str_chan_range = args.chanrange.split('-')
+            chan_range = int(str_chan_range[0]), int(str_chan_range[1])
         else:
-            chan_range=None
+            chan_range = find_rms_range(loc_dir=loc, field_name=taskid, splinefits=splinefits)
         
         new_paramfile, outlog = make_param_file(loc_dir=loc, cube_name=cube_name, cube=c, mosaic=args.mosaic, gal_em_range=chan_range)
         try:
