@@ -69,11 +69,11 @@ checkpoint make_mosaic3:
         DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_weights.fits",
     run:
         input = list(input)
-        mos_params = " ".join([i.split("/")[1] for i in input if "spline_clean_smooth_image" in i])
+        mos_params = " ".join([i.split("/")[-1] for i in input if "spline_clean_smooth_image" in i])
         os.system('mosaic-queen -mc 0.1 -n '+FIELD+'_HIcube'+CUBE+'_clean_smooth -i '+FIELD+' -o mos_'+FIELD+' -t '+mos_params+' -r')
-        os.system('rm -rf 'DATA+'/mos_'+FIELD+'/*imageR*')
-        os.system('rm -rf 'DATA+'/mos_'+FIELD+'/*pbR*')
-        os.system('rm -rf 'DATA+'/mos_'+FIELD+'/*image_fields*')
+        os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*imageR*')
+        os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*pbR*')
+        os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*image_fields*')
 
 rule dilmask:
     input:
