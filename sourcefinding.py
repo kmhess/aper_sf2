@@ -113,6 +113,9 @@ parser.add_argument('-m', "--mosaic", required=False,
                     help="If option is included, operate on a mosaic field.",
                     action='store_true')
 
+parser.add_argument('-d', '--directory', default='', required=False,
+                    help='Specify the directory where taskid/field folders live containing the data (default: %(default)s).')
+
 ###################################################################
 
 # Parse the arguments above
@@ -128,6 +131,7 @@ if '-' in args.beams:
 else:
     beams = [int(b) for b in args.beams.split(',')]
 overwrite = args.overwrite
+directory = args.directory
 
 # If operating on a mosaic, give a dummy beam.
 if args.mosaic:
@@ -137,10 +141,10 @@ if args.mosaic:
 for b in beams:
     # Define some file names and work space:
     # loc = taskid + '/B0' + str(b).zfill(2) + '/'
-    loc = taskid + '/'
+    loc = directory + '/' + taskid + '/'
     # Snakemake required input! (for now)
     if args.mosaic:                                             # Enable while using snakemake
-        loc = 'mos_' + taskid + '/'                               # Enable while using snakemake
+        loc = directory + '/mos_' + taskid + '/'                               # Enable while using snakemake
     for c in cubes:
         # cube_name = 'HI_image_cube' + str(c)
         cube_name = 'HI_B0' + str(b).zfill(2) + '_cube' + str(c) + '_image'
