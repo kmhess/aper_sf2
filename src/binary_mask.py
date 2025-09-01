@@ -73,7 +73,7 @@ args = parser.parse_args()
 taskid = args.taskid
 cubes = args.cubes
 sources = args.sources
-njobs = args.njobs
+njobs = np.max([args.njobs-1, 1])  # If only one core, force serial mode (also for 2 cores, oh well)
 
 loc = 'mos_' + taskid + '/'
 

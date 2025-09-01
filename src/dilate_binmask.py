@@ -79,7 +79,7 @@ args = parser.parse_args()
 
 taskid = args.taskid
 cubes = args.cubes
-njobs = args.njobs
+njobs = np.max([args.njobs-1, 1])  # If only one core, force serial mode (also for 2 cores, oh well)
 filename = args.filename
 suffix = '_' + args.suffix
 threshold = args.threshold
