@@ -25,7 +25,7 @@ checkpoint stack_obs:
     output:
         directory(DATA+"/"+FIELD)
     shell:
-        "python3 "+SOFTWARE+"/aper_cube_stack/cube_stack.py -f {output} -b 0-39 -c "+CUBE
+        "python3 "+SOFTWARE+"/aper_cube_stack/cube_stack_Barbara.py -f {output} -b 0-39 -c "+CUBE
 
 #run a separate job from each output of rule a
 rule generate_pb:
@@ -74,5 +74,5 @@ rule run_sofia:
         DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_rel.eps",
         DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_skellam.eps"
     shell:
-        "python3 "+SOFTWARE+"/aper_sf2/sourcefinding.py -t "+FIELD+" -c "+CUBE+" -m"
+        "python3 "+SOFTWARE+"/aper_sf2/sourcefinding.py -t "+FIELD+" -c "+CUBE+" -d "+DATA+" -m"
 
