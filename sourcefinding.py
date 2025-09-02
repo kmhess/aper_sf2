@@ -3,6 +3,7 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 
 from modules.natural_cubic_spline import fspline
 from src import checkmasks
+from src.get_gal_em_range import find_rms_range
 
 from astropy.io import fits
 import dask.array as da
@@ -15,12 +16,17 @@ import time as testtime
 dir_name = os.path.dirname(__file__)
 
 
-def make_param_file(loc_dir=None, cube_name=None, cube=None, mosaic=False):
+def make_param_file(loc_dir=None, cube_name=None, cube=None, mosaic=False, gal_em_range=None):
     param_template = dir_name + '/sofia_parameter_template.par'
     new_paramfile = loc_dir + 'sofia_parameter.par'
     if mosaic == True:
         param_template = dir_name + '/mosaic_parameter_template.par'
         new_paramfile = loc_dir + 'mosaic{}_parameter.par'.format(cube)
+    # Figures out which channels to exclude
+    if (gal_em_range[0]!=0) and (gal_em_range[1]!=0):
+        gal_em_range_str = ',{min_chan},{max_chan}'.format(min_chan=str(gal_em_range[0]),max_chan=str(gal_em_range[1]))
+    else: 
+        gal_em_range_str = ''
     outlog = loc_dir + 'sourcefinding{}.out'.format(cube)
 
     # Edit parameter file (remove lines that need editing)
@@ -30,6 +36,7 @@ def make_param_file(loc_dir=None, cube_name=None, cube=None, mosaic=False):
     os.system('grep -vwE "(output.filename)" ' + new_paramfile + ' > temp && mv temp ' + new_paramfile)
     if cube == 3:
         os.system('grep -vwE "(flag.region)" ' + new_paramfile + ' > temp && mv temp ' + new_paramfile)
+        os.system('grep -vwE "(linker.radiusZ)" ' + new_paramfile + ' > temp && mv temp ' + new_paramfile)
         os.system('grep -vwE "(linker.maxSizeXY)" ' + new_paramfile + ' > temp && mv temp ' + new_paramfile)
         os.system('grep -vwE "(linker.maxSizeZ)" ' + new_paramfile + ' > temp && mv temp ' + new_paramfile)
 
@@ -46,7 +53,8 @@ def make_param_file(loc_dir=None, cube_name=None, cube=None, mosaic=False):
     # if mosaic:                          # FILTERED SPLINE ALREADY HAS NOISE CORRECTION APPLIED!
     #     os.system('echo "input.noise                =  ' + noisefits + '" >> ' + new_paramfile)  #
     if cube == 3:
-        os.system('echo "flag.region                =  0,2600,0,2000,375,601" >> ' + new_paramfile)
+        os.system('echo "flag.region                =  0,2600,0,2000{}" >> '.format(gal_em_range_str) + new_paramfile)
+        os.system('echo "linker.radiusZ             =  6" >> ' + new_paramfile)
         os.system('echo "linker.maxSizeXY           =  280" >> ' + new_paramfile)
         os.system('echo "linker.maxSizeZ            =  385" >> ' + new_paramfile)
 
@@ -95,6 +103,11 @@ parser.add_argument('-b', '--beams', default='0-39', required=False,
 
 parser.add_argument('-c', '--cubes', default='1,2,3', required=True,
                     help='Specify the cubes on which to do source finding (default: %(default)s).')
+
+parser.add_argument('-r', "--chanrange", default=None, required=False,
+                    help='Specify a channel range (e.g., 480-500) to exclude during source finding. Specify 0-0 if no'
+                         ' channels should be excluded.'
+                         ' (default: calculated from Galactic HI exclusion algorithm).')
 
 parser.add_argument('-o', "--overwrite", required=False,
                     help="If option is included, overwrite old continuum filtered and/or spline fitted file if either"
@@ -277,7 +290,14 @@ for b in beams:
                 print("\tBeam {:02} Cube {} is not present in this directory.".format(b, c))
             continue
 
-        new_paramfile, outlog = make_param_file(loc_dir=loc, cube_name=cube_name, cube=c, mosaic=args.mosaic)
+        # Reads in range of Galactic HI emission channels to exclude, calculates if unspecified:
+        if args.chanrange != None:
+            str_chan_range = args.chanrange.split('-')
+            chan_range = int(str_chan_range[0]), int(str_chan_range[1])
+        else:
+            chan_range = find_rms_range(loc_dir=loc, field_name=taskid, splinefits=splinefits)
+        
+        new_paramfile, outlog = make_param_file(loc_dir=loc, cube_name=cube_name, cube=c, mosaic=args.mosaic, gal_em_range=chan_range)
         try:
             print("[SOURCEFINDING] Cleaning up old mask and catalog files before source finding.")
             # os.system('rm -rf ' + loc + cube_name + '*_sofia_*.fits ' + loc + cube_name + '*_sofia_cat.txt')
