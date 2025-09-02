@@ -25,7 +25,7 @@ checkpoint stack_obs:
     output:
         directory(DATA+"/"+FIELD)
     shell:
-        "python3 "+SOFTWARE+"/aper_cube_stack/cube_stack_Barbara.py -f {output} -b 0-39 -c "+CUBE
+        "python3 "+SOFTWARE+"/aper_cube_stack/cube_stack_Barbara.py -f "+FIELD+" -b 0-39 -c "+CUBE+" -d "+DATA
 
 #run a separate job from each output of rule a
 rule generate_pb:
@@ -60,7 +60,7 @@ rule make_mosaic:
         os.system('mosaic-queen -mc 0.1 -n '+FIELD+'_HIcube'+CUBE+' -i '+FIELD+' -o mos_'+FIELD+' -t '+mos_params+' -r')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*imageR*')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*pbR*')
-        os.system('rm -rf 'DATA+'/mos_'+FIELD+'/*image_fields*')
+        os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*image_fields*')
 
 rule run_sofia:
     input:
