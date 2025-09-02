@@ -131,7 +131,7 @@ if '-' in args.beams:
 else:
     beams = [int(b) for b in args.beams.split(',')]
 overwrite = args.overwrite
-directory = args.directory
+d = args.directory
 
 # If operating on a mosaic, give a dummy beam.
 if args.mosaic:
@@ -141,10 +141,10 @@ if args.mosaic:
 for b in beams:
     # Define some file names and work space:
     # loc = taskid + '/B0' + str(b).zfill(2) + '/'
-    loc = directory + '/' + taskid + '/'
+    loc = d + '/' + taskid + '/'
     # Snakemake required input! (for now)
     if args.mosaic:                                             # Enable while using snakemake
-        loc = directory + '/mos_' + taskid + '/'                               # Enable while using snakemake
+        loc = d + '/mos_' + taskid + '/'                               # Enable while using snakemake
     for c in cubes:
         # cube_name = 'HI_image_cube' + str(c)
         cube_name = 'HI_B0' + str(b).zfill(2) + '_cube' + str(c) + '_image'
