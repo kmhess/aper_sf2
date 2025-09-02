@@ -61,6 +61,7 @@ rule make_mosaic:
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*imageR*')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*pbR*')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*image_fields*')
+        os.system('rm -rf '+DATA+'/'+FIELD+'/HI_B0{bm}_cube'+CUBE+'_pb.fits')
 
 rule run_sofia:
     input:
