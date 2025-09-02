@@ -56,7 +56,7 @@ rule make_mosaic:
         DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_weights.fits"
     run:
         input = list(input)
-        mos_params = " ".join([i.split("/")[1] for i in input if "image" in i])
+        mos_params = " ".join([i.split("/")[-1] for i in input if "image" in i])
         os.system('mosaic-queen -mc 0.1 -n '+FIELD+'_HIcube'+CUBE+' -i '+FIELD+' -o mos_'+FIELD+' -t '+mos_params+' -r')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*imageR*')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*pbR*')
