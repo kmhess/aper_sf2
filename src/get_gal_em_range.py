@@ -120,13 +120,14 @@ def plot_rms_channel(loc_dir, field_name, splinefits, rms_table, chan_range, hig
     
     plt.title('Field {field}: Channels {min_chan} to {max_chan} excluded'.format(field=field_name, min_chan=chan_range[0], 
                                                                                  max_chan=chan_range[1]))
-    plt.savefig(loc_dir + '{field}_rms_per_channel.png'.format(field=field_name), bbox_inches='tight')
+    # Hard coded "cube3" because only cube with MWG to avoid.
+    plt.savefig(loc_dir + '{field}_HIcube3_rms_per_channel.png'.format(field=field_name), bbox_inches='tight')
 
 
 #finds and plots RMS noise as a function of channel in the cube, along with selected channels with high RMS in the Galactic emission region to exclude
 def find_rms_range(loc_dir=None, field_name=None, splinefits=None):
-    #checking if rms is on file. If not, calculates and saves it.
-    rms_path = loc_dir + '{field_name}_RMS_mean.txt'.format(field_name = field_name)
+    #checking if rms is on file. If not, calculates and saves it.  Hard coded "cube3" because only cube with MWG to avoid
+    rms_path = loc_dir + '{field_name}_HIcube3_RMS_mean.txt'.format(field_name = field_name)
     if os.path.exists(rms_path):
         print('RMS file found! Reading it in.')
         rms_table = ascii.read(rms_path)
