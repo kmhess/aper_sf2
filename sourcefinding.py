@@ -22,11 +22,6 @@ def make_param_file(loc_dir=None, cube_name=None, cube=None, mosaic=False, gal_e
     if mosaic == True:
         param_template = dir_name + '/mosaic_parameter_template.par'
         new_paramfile = loc_dir + 'mosaic{}_parameter.par'.format(cube)
-    # Figures out which channels to exclude
-    if (gal_em_range[0]!=0) and (gal_em_range[1]!=0):
-        gal_em_range_str = ',{min_chan},{max_chan}'.format(min_chan=str(gal_em_range[0]),max_chan=str(gal_em_range[1]))
-    else: 
-        gal_em_range_str = ''
     outlog = loc_dir + 'sourcefinding{}.out'.format(cube)
 
     # Edit parameter file (remove lines that need editing)
@@ -35,7 +30,6 @@ def make_param_file(loc_dir=None, cube_name=None, cube=None, mosaic=False, gal_e
     #     os.system('grep -vwE "(input.noise)" ' + new_paramfile + ' > temp && mv temp ' + new_paramfile)  #
     os.system('grep -vwE "(output.filename)" ' + new_paramfile + ' > temp && mv temp ' + new_paramfile)
     if cube == 3:
-        os.system('grep -vwE "(flag.region)" ' + new_paramfile + ' > temp && mv temp ' + new_paramfile)
         os.system('grep -vwE "(linker.radiusZ)" ' + new_paramfile + ' > temp && mv temp ' + new_paramfile)
         os.system('grep -vwE "(linker.maxSizeXY)" ' + new_paramfile + ' > temp && mv temp ' + new_paramfile)
         os.system('grep -vwE "(linker.maxSizeZ)" ' + new_paramfile + ' > temp && mv temp ' + new_paramfile)
@@ -53,7 +47,12 @@ def make_param_file(loc_dir=None, cube_name=None, cube=None, mosaic=False, gal_e
     # if mosaic:                          # FILTERED SPLINE ALREADY HAS NOISE CORRECTION APPLIED!
     #     os.system('echo "input.noise                =  ' + noisefits + '" >> ' + new_paramfile)  #
     if cube == 3:
-        os.system('echo "flag.region                =  0,2600,0,2000{}" >> '.format(gal_em_range_str) + new_paramfile)
+        # Figures out which channels to exclude
+        gal_em_range_str = ',{min_chan},{max_chan}'.format(min_chan=str(gal_em_range[0]), max_chan=str(gal_em_range[1]))
+        if (gal_em_range[0]!=0) and (gal_em_range[1]!=0):
+            print("\tExcluding Galactic emission between channels {}".format(gal_em_range_str))
+            os.system('grep -vwE "(flag.region)" ' + new_paramfile + ' > temp && mv temp ' + new_paramfile)
+            os.system('echo "flag.region                =  0,2600,0,2000{}" >> '.format(gal_em_range_str) + new_paramfile)
         os.system('echo "linker.radiusZ             =  6" >> ' + new_paramfile)
         os.system('echo "linker.maxSizeXY           =  280" >> ' + new_paramfile)
         os.system('echo "linker.maxSizeZ            =  385" >> ' + new_paramfile)
