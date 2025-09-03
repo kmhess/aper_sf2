@@ -38,26 +38,23 @@ matplotlib.rcParams['font.family'] = 'STIXGeneral'
 plt.rcParams['text.usetex'] = False
 matplotlib.rcParams['font.size'] = 15
 
-#fits header params, which I think are the same for all cube3 fields (check in CARTA as you read them in, 
-#and note them in field_header_vals.txt
-CRVAL3 = 1.414366893369E+09
-CRPIX3 = 1
-CDELT3 = 1.220703125000E+04
-
-#helpful values
 HI_restfreq = 1420405751.77 * u.Hz
-range_hist=[1.4177e9, 1.422e9] #analysis range (rough [wide] range where Galactic emission will be)
+range_hist = [1.4177e9, 1.422e9] #analysis range (rough [wide] range where Galactic emission will be)
+
 
 #adapted from https://github.com/kmhess/SoFiA-image-pipeline/blob/master/src/modules/functions.py
-def chan2freq(channels):
+def chan2freq(channels, fits_name):
     #converting from channels to frequencies
-    frequencies = (CDELT3 * channels + CRVAL3) * u.Hz 
+    header = fits.getheader(fits_name)
+    frequencies = (header['CDELT3'] * channels + header['CRVAL3']) * u.Hz     # parameter.offset=False ?
+
     return frequencies
 
 #adapted from https://github.com/kmhess/SoFiA-image-pipeline/blob/master/src/modules/functions.py
-def freq2chan(frequencies):
+def freq2chan(frequencies, fits_name):
     #converting from frequencies to channels
-    channels = (((frequencies) - CRVAL3)/CDELT3)
+    header = fits.getheader(fits_name)
+    channels = (((frequencies) - header['CRVAL3']) / header['CDELT3'])
 
     #transforming into right format
     if hasattr(channels, "__len__"):
@@ -91,7 +88,7 @@ def plot_rms_channel(loc_dir, field_name, splinefits, rms_table, chan_range, hig
     ax.vlines(range_hist[1], 0.975,1.1, color='black', linestyles='--')
 
     #warning user if channel range is large or 0
-    ex_range_width = abs(freq2vel(chan2freq(chan_range[1]).value)-freq2vel(chan2freq(chan_range[0]).value))
+    ex_range_width = abs(freq2vel(chan2freq(chan_range[1], splinefits).value) - freq2vel(chan2freq(chan_range[0], splinefits).value))
     
     if ex_range_width>150:
         print('WARNING: The calculated Galactic velocity range is large (>150 km/s). Please check to make sure the exclusion channel range is correct.')
@@ -102,9 +99,9 @@ def plot_rms_channel(loc_dir, field_name, splinefits, rms_table, chan_range, hig
     if (ex_range_width!=0):
         #plotting calculated range of channels to exclude
         ax.scatter(rms_table['Frequency'][high_rms_mask], rms_table['RMS'][high_rms_mask], s=4, color='red')
-        ax.vlines(chan2freq(chan_range[0]).value, 0.975,1.1, color='green', 
-                   linestyles='--', label='Exclusion Range', alpha=0.3)
-        ax.vlines(chan2freq(chan_range[1]).value, 0.975,1.1, color='green', linestyles='--', alpha=0.3)
+        ax.vlines(chan2freq(chan_range[0], splinefits).value, 0.975,1.1, color='green', linestyles='--', 
+                  label='Exclusion Range', alpha=0.3)
+        ax.vlines(chan2freq(chan_range[1], splinefits).value, 0.975,1.1, color='green', linestyles='--', alpha=0.3)
     
     #plotting expected velocity ranges from Galactic emission model
     l, b = get_lb(splinefits)
@@ -170,8 +167,8 @@ def find_rms_range(loc_dir=None, field_name=None, splinefits=None):
     if len(rms_table[high_rms_mask])>0:
         #converting edges of high-rms frequency range into channels 
         max_chan_edges = freq2chan(np.array([min(rms_table['Frequency'][high_rms_mask]),
-                                         max(rms_table['Frequency'][high_rms_mask])]))
-        chan_range = (min(max_chan_edges)-chan_offset,max(max_chan_edges)+chan_offset)
+                                             max(rms_table['Frequency'][high_rms_mask])]), splinefits)
+        chan_range = (min(max_chan_edges) - chan_offset, max(max_chan_edges) + chan_offset)
     else:
         chan_range = (0,0)
 
@@ -180,7 +177,7 @@ def find_rms_range(loc_dir=None, field_name=None, splinefits=None):
     exp_vel = get_gal_vel(l, b)
 
     #updating channel range based on expected ranges
-    exp_chan_range = freq2chan(vel2freq(exp_vel))
+    exp_chan_range = freq2chan(vel2freq(exp_vel), splinefits)
 
     final_chan_range = (min(np.append(chan_range,exp_chan_range)),
                         max(np.append(chan_range,exp_chan_range)))
