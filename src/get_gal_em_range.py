@@ -140,7 +140,8 @@ def find_rms_range(loc_dir=None, field_name=None, splinefits=None):
         mean = np.nanmean(filtered_cube[0].data, axis=(1, 2))
         
         #saving rms to file 
-        rms_table = Table([np.array(range(filtered_cube[0].data.shape[0])), rms, mean], names=['Frequency', 'RMS', 'Mean'])
+        rms_table = Table([chan2freq(np.array(range(filtered_cube[0].data.shape[0])), splinefits), rms, mean], 
+                          names=['Frequency', 'RMS', 'Mean'])
         rms_table.write(rms_path, format='ascii', overwrite=True)
 
     freq_and_reasonable_rms_mask = ((rms_table['Frequency'] < range_hist[1]) &
