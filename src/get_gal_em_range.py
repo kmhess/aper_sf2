@@ -135,16 +135,14 @@ def find_rms_range(loc_dir=None, field_name=None, splinefits=None):
         rms = rms_table['RMS']
     else: 
         print('RMS file not found. Calculating and saving RMS.')
-        #reading in cube
-        filtered_cube = SpectralCube.read(splinefits)
-        filtered_cube.allow_huge_operations=True
+        filtered_cube = fits.open(splinefits)
         #calculating rms and mean
-        rms = np.std(filtered_cube, axis=(1, 2))
-        mean = np.mean(filtered_cube, axis=(1, 2))
+        rms = np.std(filtered_cube[0].data, axis=(1, 2))
+        mean = np.mean(filtered_cube[0].data, axis=(1, 2))
         
         #saving rms to file 
-        rms_table = Table([np.array(filtered_cube.spectral_axis), rms, mean], names=['Frequency', 'RMS', 'Mean'])
-        rms_table.write(rms_path, format='ascii',overwrite=True)
+        rms_table = Table([np.array(range(filtered_cube[0].data.shape[0])), rms, mean], names=['Frequency', 'RMS', 'Mean'])
+        rms_table.write(rms_path, format='ascii', overwrite=True)
 
     freq_and_reasonable_rms_mask = ((rms_table['Frequency']<range_hist[1])&
                                  (rms_table['Frequency']>range_hist[0])&
