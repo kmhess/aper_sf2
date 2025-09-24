@@ -57,7 +57,7 @@ rule make_mosaic:
     run:
         input = list(input)
         mos_params = " ".join([i.split("/")[-1] for i in input if "image" in i])
-        os.system('mosaic-queen -mc 0.1 -n '+FIELD+'_HIcube'+CUBE+' -i '+FIELD+' -o mos_'+FIELD+' -t '+mos_params+' -r')
+        os.system('mosaic-queen -mc 0.1 -n '+FIELD+'_HIcube'+CUBE+' -i '+DATA+'/'+FIELD+' -o '+DATA+'/mos_'+FIELD+' -t '+mos_params+' -f')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*imageR*')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*pbR*')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*image_fields*')
