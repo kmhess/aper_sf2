@@ -126,23 +126,19 @@ def plot_rms_channel(loc_dir, field_name, splinefits, rms_table, chan_range, hig
 
 #finds and plots RMS noise as a function of channel in the cube, along with selected channels with high RMS in the Galactic emission region to exclude
 def find_rms_range(loc_dir=None, field_name=None, splinefits=None):
-    #checking if rms is on file. If not, calculates and saves it.  Hard coded "cube3" because only cube with MWG to avoid
+    #Calculates and saves RMS.  Hard coded "cube3" because only cube with MWG to avoid
     rms_path = loc_dir + '{field_name}_HIcube3_RMS_mean.txt'.format(field_name = field_name)
-    if os.path.exists(rms_path):
-        print('RMS file found! Reading it in.')
-        rms_table = ascii.read(rms_path)
-        rms = rms_table['RMS']
-    else: 
-        print('RMS file not found. Calculating and saving RMS.')
-        filtered_cube = fits.open(splinefits)
-        #calculating rms and mean
-        rms = np.nanstd(filtered_cube[0].data, axis=(1, 2))
-        mean = np.nanmean(filtered_cube[0].data, axis=(1, 2))
+
+    print('Calculating and saving RMS.')
+    filtered_cube = fits.open(splinefits)
+    #calculating rms and mean
+    rms = np.nanstd(filtered_cube[0].data, axis=(1, 2))
+    mean = np.nanmean(filtered_cube[0].data, axis=(1, 2))
         
-        #saving rms to file 
-        rms_table = Table([chan2freq(np.array(range(filtered_cube[0].data.shape[0])), splinefits), rms, mean], 
+    #saving rms to file 
+    rms_table = Table([chan2freq(np.array(range(filtered_cube[0].data.shape[0])), splinefits), rms, mean], 
                           names=['Frequency', 'RMS', 'Mean'])
-        rms_table.write(rms_path, format='ascii', overwrite=True)
+    rms_table.write(rms_path, format='ascii', overwrite=True)
 
     freq_and_reasonable_rms_mask = ((rms_table['Frequency'] < range_hist[1]) &
                                  (rms_table['Frequency'] > range_hist[0]) &
