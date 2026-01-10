@@ -77,5 +77,5 @@ rule run_sofia:
         DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_rel.eps",
         DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_skellam.eps"
     shell:
-        "python3 "+SOFTWARE+"/aper_sf2/sourcefinding_pool.py -t "+FIELD+" -c "+CUBE+" -d "+DATA+" -m -j "+str(workflow.cores)+" -o"+" -r "+CHAN_RANGE
+        "python3 "+SOFTWARE+"/aper_sf2/sourcefinding2.py -t "+FIELD+" -c "+CUBE+" -d "+DATA+" -m -j "+str(workflow.cores)+" -o"+" -r "+CHAN_RANGE
 
