@@ -10,7 +10,7 @@ from astropy import units as u
 from astropy.wcs import WCS
 import matplotlib.pyplot as plt
 import numpy as np
-# import time as testtime
+import time as testtime
 
 from src.filter2d import filter2d
 
@@ -131,9 +131,10 @@ def main(loc, taskid, beam=[40], cubes=[1, 2, 3], nospline=False, mosaic=False):
                     print("\tNo continuum filtered file for Beam {:02} Cube {}. Check sourcefinding/ALTA?".format(b, c))
                     # As a precaution, if there is no filtered cube, don't plot source masks either.
                     continue
-
+                print(loc + cube_name + '_sofiaFS_cat.txt')
                 if os.path.isfile(loc + cube_name + '_sofiaFS_cat.txt'):
                     cat = ascii.read(loc + cube_name + '_sofiaFS_cat.txt')
+                    print(loc + cube_name + '_sofiaFS_cat.txt')
                     print("\tFound {} sources in Beam {:02} Cube {}".format(len(cat), b, c))
                     if (len(cat) > max_cat_len) and (not mosaic):
                         print("\tMore than {} candidates: seems this cube is crap".format(max_cat_len))
@@ -143,7 +144,7 @@ def main(loc, taskid, beam=[40], cubes=[1, 2, 3], nospline=False, mosaic=False):
                     hdu_mask = fits.open(loc + cube_name + '_sofiaFS_mask-2d.fits')
                     mask2d = hdu_mask[0].data[:, :]
 
-                    mask2d = np.asfarray(mask2d)
+                    mask2d = mask2d.astype(float)
                     mask2d[mask2d < 1] = np.nan
 
                     # if os.path.isfile(loc + cube_name + '_all_spline.fits'):
@@ -165,6 +166,8 @@ def main(loc, taskid, beam=[40], cubes=[1, 2, 3], nospline=False, mosaic=False):
                     ax_im[0, a-1].tick_params(axis='both', which='major', labelsize=18)
 
                     for s in range(len(cat)):
+                        print(s)
+                        tic1 = testtime.perf_counter()
                         ax_im[0, a-1].text(cat['col3'][s] + np.random.uniform(-40, 40),
                                            cat['col4'][s] + np.random.uniform(-40, 40),
                                            cat['col2'][s], color='black', fontsize=20)
@@ -190,7 +193,7 @@ def main(loc, taskid, beam=[40], cubes=[1, 2, 3], nospline=False, mosaic=False):
                             panel = s % source_per_beam
                             if panel == 0:
                                 print("[CHECKMASKS] Making inpsection plot {} of {} for spectra.".format(s//source_per_beam+1,
-                                                                             np.int(np.ceil(len(cat)/source_per_beam))))
+                                                                             int(np.ceil(len(cat)/source_per_beam))))
                                 fig_spec, ax_spec = plt.subplots(source_per_beam, 1, figsize=(15, 3 * source_per_beam),
                                                                  squeeze=False)
                         # Plot spectra
@@ -217,14 +220,17 @@ def main(loc, taskid, beam=[40], cubes=[1, 2, 3], nospline=False, mosaic=False):
                             if (panel == source_per_beam - 1) | (s == len(cat) - 1):
                                 ax_spec[panel, 0].set_xlabel("Optical Velocity [km/s]")
                                 fig_spec.savefig(loc + 'HI_image{}_sofia_summary_spec{}of{}_filtspline.png'.format(c,
-                                                 s//source_per_beam+1, np.int(np.ceil(len(cat)/source_per_beam))),
+                                                 s//source_per_beam+1, int(np.ceil(len(cat)/source_per_beam))),
                                                  bbox_inches='tight')
                         else:
                             if previous + s == source_per_beam - 1:
                                 ax_spec[previous + s, 0].set_xlabel("Optical Velocity [km/s]")
                             if s+1 >= max_cat_len:
                                 ax_spec[previous + s, 0].text(0.5, 0.05, "Too many spectra to plot, check by hand.",
-                                                              ha='center', transform=ax_spec[previous + s, 0].transAxes)
+                                                              ha='center', transform=ax_spec[previous + s, 0].transAxes
+                                                             )
+                        toc1 = testtime.perf_counter()
+                        print(f"make plots for one source: {toc1 - tic1:0.4f} seconds")
                     previous += len(cat)
 
                     hdu_mask.close()
@@ -267,5 +273,5 @@ if __name__ == '__main__':
         beams = [int(b) for b in arguments.beams.split(',')]
     if loc[-1] != '/':
         loc = loc + '/'
-
+    
     main(loc, taskid, beams, cubes=cubes, nospline=nospline, mosaic=mosaic)

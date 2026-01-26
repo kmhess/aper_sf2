@@ -24,6 +24,7 @@ from astropy.table import Table
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+from functools import partial
 
 from src.get_exp_gal_em import get_lb, get_gal_vel
 
@@ -60,6 +61,34 @@ def freq2chan(frequencies, fits_name):
 
     return channels
 
+#adapted from https://github.com/kmhess/SoFiA-image-pipeline/blob/master/src/modules/functions.py
+def vel2chan(velocities, fits_name):
+    #vel to frequencies
+    redshift = (velocities*(u.km/u.s)) / (const.c)
+    frequencies = HI_restfreq / (1 + redshift)
+
+    #converting from frequencies to channels
+    header = fits.getheader(fits_name)
+    channels = (((frequencies.value) - header['CRVAL3']) / header['CDELT3'])
+
+    #transforming into right format
+    if hasattr(channels, "__len__"):
+        channels = np.array([int(channel) for channel in channels])
+    else:
+        channels = int(channels)
+
+    return channels
+
+#adapted from https://github.com/kmhess/SoFiA-image-pipeline/blob/master/src/modules/functions.py
+def chan2vel(channels, fits_name):
+    #converting from channels to frequencies
+    header = fits.getheader(fits_name)
+    frequencies = (header['CDELT3'] * channels + header['CRVAL3']) * u.Hz     # parameter.offset=False ?
+    #frequencies to velocities
+    redshift = (HI_restfreq - (frequencies)) / (frequencies)
+    velocities = (redshift*const.c).to(u.km/u.s)
+
+    return velocities
 
 #adapted from https://github.com/kmhess/SoFiA-image-pipeline/blob/master/src/modules/functions.py
 def freq2vel(frequencies):
@@ -79,14 +108,24 @@ def vel2freq(velocities):
 
 #plots RMS noise as a function of channel and channels with high RMS in the Galactic emission region to exclude
 def plot_rms_channel(loc_dir, field_name, splinefits, rms_table, chan_range, high_rms_mask):
-    #plotting RMS vs. frequency/velocity
-    fig, ax = plt.subplots()
+    #plotting RMS vs. frequency/velocity and RMS vs. channels
+    fig, axes = plt.subplot_mosaic('''
+                                   AB
+                                   ''', figsize=(15,4), gridspec_kw={'wspace':0.2})
 
-    ax.scatter(rms_table['Frequency'][rms_table['RMS']<3], rms_table['RMS'][rms_table['RMS']<3], s=4)
+    #plotting RMS vs. frequency/velocity
+    axes['A'].scatter(rms_table['Frequency'][rms_table['RMS']<3], rms_table['RMS'][rms_table['RMS']<3], s=4)
 
     #plotting range of channels used in the high-rms analysis/calculation
-    ax.vlines(range_hist[0], 0.975, 1.1, color='black', linestyles='--', label='Analysis Range')
-    ax.vlines(range_hist[1], 0.975, 1.1, color='black', linestyles='--')
+    axes['A'].vlines(range_hist[0], 0.975, 1.1, color='black', linestyles='--', label='Analysis Range')
+    axes['A'].vlines(range_hist[1], 0.975, 1.1, color='black', linestyles='--')
+
+    #plotting RMS vs. channels
+    axes['B'].scatter(freq2chan(rms_table['Frequency'][rms_table['RMS']<3], splinefits), rms_table['RMS'][rms_table['RMS']<3], s=4)
+
+    #plotting range of channels used in the high-rms analysis/calculation
+    axes['B'].vlines(freq2chan(range_hist[0], splinefits), 0.975, 1.1, color='black', linestyles='--', label='Analysis Range')
+    axes['B'].vlines(freq2chan(range_hist[0], splinefits), 0.975, 1.1, color='black', linestyles='--')
 
     #warning user if channel range is large or 0
     ex_range_width = abs(freq2vel(chan2freq(chan_range[1], splinefits).value) - freq2vel(chan2freq(chan_range[0], 
@@ -100,24 +139,38 @@ def plot_rms_channel(loc_dir, field_name, splinefits, rms_table, chan_range, hig
     #checking if there are any high-rms channels 
     if (ex_range_width != 0):
         #plotting calculated range of channels to exclude
-        ax.scatter(rms_table['Frequency'][high_rms_mask], rms_table['RMS'][high_rms_mask], s=4, color='red')
-        ax.vlines(chan2freq(chan_range[0], splinefits).value, 0.975, 1.1, color='green', linestyles='--', 
+        axes['A'].scatter(rms_table['Frequency'][high_rms_mask], rms_table['RMS'][high_rms_mask], s=4, color='red')
+        axes['A'].vlines(chan2freq(chan_range[0], splinefits).value, 0.975, 1.1, color='green', linestyles='--', 
                   label='Exclusion Range', alpha=0.3)
-        ax.vlines(chan2freq(chan_range[1], splinefits).value, 0.975, 1.1, color='green', linestyles='--', alpha=0.3)
+        axes['A'].vlines(chan2freq(chan_range[1], splinefits).value, 0.975, 1.1, color='green', linestyles='--', alpha=0.3)
+
+        axes['B'].scatter(freq2chan(rms_table['Frequency'][high_rms_mask], splinefits),
+                rms_table['RMS'][high_rms_mask], s=4, color='red')
+        axes['B'].vlines(chan_range[0], 0.975, 1.1, color='green', linestyles='--', 
+                  label='Exclusion Range', alpha=0.3)
+        axes['B'].vlines(chan_range[1], 0.975, 1.1, color='green', linestyles='--', alpha=0.3)
     
     #plotting expected velocity ranges from Galactic emission model
     l, b = get_lb(splinefits)
     exp_vel = get_gal_vel(l, b)
-    ax.fill_betweenx([0.975, 1.1], vel2freq(exp_vel[0]), vel2freq(exp_vel[1]), color='pink', 
+    axes['A'].fill_betweenx([0.975, 1.1], vel2freq(exp_vel[0]), vel2freq(exp_vel[1]), color='pink',
+                     label='Expected Range', alpha=1.0, zorder=0)
+    axes['B'].fill_betweenx([0.975, 1.1], vel2chan(exp_vel[0],splinefits),
+            vel2chan(exp_vel[1],splinefits), color='pink', 
                      label='Expected Range', alpha=1.0, zorder=0)
 
-    ax.legend(loc='upper right')
-    ax.set_xlabel('Freq [Hz]')
-    ax.set_ylabel('RMS [Jy/beam]')
-    ax.set_ylim(0.975, 1.1)
-    secax = ax.secondary_xaxis('top', functions=(freq2vel, vel2freq))
+    axes['A'].legend(loc='upper right')
+    axes['A'].set_xlabel('Freq [Hz]')
+    axes['A'].set_ylabel('RMS [Jy/beam]')
+    axes['A'].set_ylim(0.975, 1.1)
+    secax = axes['A'].secondary_xaxis('top', functions=(freq2vel, vel2freq))
     secax.set_xlabel('Velocity [km/s]')
-    
+
+    axes['B'].legend(loc='upper right')
+    axes['B'].set_xlabel('Channel')
+    axes['B'].set_ylabel('RMS [Jy/beam]')
+    axes['B'].set_ylim(0.975, 1.1)
+
     plt.title('Field {field}: Channels {min_chan} to {max_chan} excluded'.format(field=field_name, min_chan=chan_range[0], 
                                                                                  max_chan=chan_range[1]))
     # Hard coded "cube3" because only cube with MWG to avoid.
@@ -126,23 +179,19 @@ def plot_rms_channel(loc_dir, field_name, splinefits, rms_table, chan_range, hig
 
 #finds and plots RMS noise as a function of channel in the cube, along with selected channels with high RMS in the Galactic emission region to exclude
 def find_rms_range(loc_dir=None, field_name=None, splinefits=None):
-    #checking if rms is on file. If not, calculates and saves it.  Hard coded "cube3" because only cube with MWG to avoid
+    #Calculates and saves RMS.  Hard coded "cube3" because only cube with MWG to avoid
     rms_path = loc_dir + '{field_name}_HIcube3_RMS_mean.txt'.format(field_name = field_name)
-    if os.path.exists(rms_path):
-        print('RMS file found! Reading it in.')
-        rms_table = ascii.read(rms_path)
-        rms = rms_table['RMS']
-    else: 
-        print('RMS file not found. Calculating and saving RMS.')
-        filtered_cube = fits.open(splinefits)
-        #calculating rms and mean
-        rms = np.nanstd(filtered_cube[0].data, axis=(1, 2))
-        mean = np.nanmean(filtered_cube[0].data, axis=(1, 2))
+
+    print('Calculating and saving RMS.')
+    filtered_cube = fits.open(splinefits)
+    #calculating rms and mean
+    rms = np.nanstd(filtered_cube[0].data, axis=(1, 2))
+    mean = np.nanmean(filtered_cube[0].data, axis=(1, 2))
         
-        #saving rms to file 
-        rms_table = Table([chan2freq(np.array(range(filtered_cube[0].data.shape[0])), splinefits), rms, mean], 
+    #saving rms to file 
+    rms_table = Table([chan2freq(np.array(range(filtered_cube[0].data.shape[0])), splinefits), rms, mean], 
                           names=['Frequency', 'RMS', 'Mean'])
-        rms_table.write(rms_path, format='ascii', overwrite=True)
+    rms_table.write(rms_path, format='ascii', overwrite=True)
 
     freq_and_reasonable_rms_mask = ((rms_table['Frequency'] < range_hist[1]) &
                                  (rms_table['Frequency'] > range_hist[0]) &

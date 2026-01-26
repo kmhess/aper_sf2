@@ -1,5 +1,6 @@
-FIELD: S1421+5324
-CUBE: 2
-PATH_TO_DATA: /mnt/data
-PATH_TO_SOFTWARE: /mnt/scratch/stuff
-PATH_TO_CBEAMS: /mnt/scratch/apertif/cbeams
+FIELD: S1201+5550
+CUBE: 3
+PATH_TO_DATA: /project/apdw/Data
+PATH_TO_SOFTWARE: /project/apdw/Software
+PATH_TO_CBEAMS: /project/apdw/Software/cbeams
+CHAN_RANGE: None
