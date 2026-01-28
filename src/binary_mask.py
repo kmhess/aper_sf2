@@ -61,6 +61,9 @@ parser.add_argument('-j', "--njobs", type=int,
                     help="Number of jobs to run in parallel (default: %(default)s) tested on happili-05.",
                     default=18)
 
+parser.add_argument('-d', '--directory', default='', required=False,
+                    help='Specify the directory where taskid/field folders live containing the data (default: %(default)s).')
+
 # Parse the arguments above
 args = parser.parse_args()
     # return args
@@ -74,8 +77,9 @@ taskid = args.taskid
 cubes = args.cubes
 sources = args.sources
 njobs = np.max([args.njobs-1, 1])  # If only one core, force serial mode (also for 2 cores, oh well)
+d = args.directory
 
-loc = 'mos_' + taskid + '/'
+loc = d + '/mos_' + taskid + '/'
 
 for c in cubes:
     cube_name = taskid + '_HIcube' + str(c) + '_image'

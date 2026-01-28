@@ -67,6 +67,9 @@ parser.add_argument('-f', "--filename", default=None,
 parser.add_argument('-s', "--suffix", default='new',
                     help="Only relevant when filename is provided. Optional suffix for new file.")
 
+parser.add_argument('-d', '--directory', default='', required=False,
+                    help='Specify the directory where taskid/field folders live containing the data (default: %(default)s).')
+
 
 # Parse the arguments above
 args = parser.parse_args()
@@ -84,8 +87,9 @@ filename = args.filename
 suffix = '_' + args.suffix
 threshold = args.threshold
 iters = int(args.iterations)
+d = args.directory
 
-loc = 'mos_' + taskid + '/'
+loc = d + '/mos_' + taskid + '/'
 
 for c in cubes:
     cube_name = taskid + '_HIcube' + str(c) + '_image'

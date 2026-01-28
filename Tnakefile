@@ -26,7 +26,7 @@ rule make_bin_mask:
     resources:
         mem_mb = 5000
     shell:
-        "python3 "+SOFTWARE+"/aper_sf2/src/binary_mask.py -t "+FIELD+" -c "+CUBE
+        "python3 "+SOFTWARE+"/aper_sf2/src/binary_mask.py -d "+DATA+" -t "+FIELD+" -c "+CUBE
 
 rule dilate_mask:
     input:
@@ -38,7 +38,7 @@ rule dilate_mask:
     resources:
         mem_mb = 5000
     shell:
-        "python3 "+SOFTWARE+"/aper_sf2/src/dilate_binmask.py -t "+FIELD+" -c "+CUBE
+        "python3 "+SOFTWARE+"/aper_sf2/src/dilate_binmask.py -d "+DATA+" -t "+FIELD+" -c "+CUBE
 
 rule regrid_masks:
     input:
@@ -77,7 +77,7 @@ rule stack_psf:
         mem_mb = 30000 # For AWES;  MEMORY PER CORE NOT TOTAL!!!
       #  mem_mb = 185000  # For MDS 
     shell:
-        "python3 "+SOFTWARE+"/aper_cube_stack/psf_stack.py -f "+FIELD+" -b {wildcards.bm} -c "+CUBE
+        "python3 "+SOFTWARE+"/aper_cube_stack/psf_stack.py -f "+FIELD+" -b {wildcards.bm} -c "+CUBE+" -d "+DATA
 
 #  NEEDS TO BE IN A CONTAINER!!
 checkpoint f:
