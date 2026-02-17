@@ -195,7 +195,7 @@ for b in beams:
             continue
 
         toc1 = testtime.perf_counter()
-        print(f"Make continuum filtered file: {toc1 - tic1:0.4f} seconds")
+        print(f"Made continuum filtered file: {toc1 - tic1:0.4f} seconds")
 
         # Check to see if the spline fitted file exists.  If not, make it from filtered file.
         if (not overwrite) & os.path.isfile(splinefits):
@@ -205,7 +205,7 @@ for b in beams:
             print(" - Loading the input cube")
             os.system('cp {} {}'.format(filteredfits, splinefits))              #DELETE THIS WHEN NECESSARY *******************************
             # os.system('cp {} {}'.format(sourcefits, splinefits))              #
-            splinecube = fits.open(splinefits,memmap=True)
+            splinecube = fits.open(splinefits, memmap=True)
             orig = fits.open(filteredfits, memmap=True)                                 #DELETE THIS WHEN NECESSARY *******************************
             # orig = fits.open(sourcefits)                                 #
             orig_data = orig[0].data
@@ -231,8 +231,7 @@ for b in beams:
             print(" - " + str(ncases) + " cases found")
             
             #setting chunksize to something which ncases is divisible by 
-            chunksize=orig_data.shape[1]
-
+            chunksize = orig_data.shape[1]
 
             if njobs > 1:
                 print(" - Running in parallel mode (" + str(njobs) + " jobs simultaneously)")
@@ -262,17 +261,16 @@ for b in beams:
             
             #writing the fit subtracted data to the file
             for i in range(ncases):
-                splinecube_data[:,x[i],y[i]] = orig_data[:,x[i],y[i]]-fits_list[i]
+                splinecube_data[:,x[i],y[i]] = orig_data[:,x[i],y[i]] - fits_list[i]
             #splinecube_data[:,x,y] = orig_data[:,x,y]-fits_list.T
 
             #debug print
             #print('The data is written in a new array with shape: '+str(splinecube_data.shape)+' and '+str(len(splinecube_data[np.isnan(splinecube_data)]))+' NaNs')
             #print('The old data shape was '+str(orig_data.shape)+' and it had '+str(len(orig_data[np.isnan(orig_data)]))+' NaNs')
 
-
             # Updating the Splinecube file with the new data
             print(" - Updating the Splinecube file")
-            splinecube = fits.open(splinefits,mode='update')
+            splinecube = fits.open(splinefits, mode='update')
             splinecube[0].data = splinecube_data
             splinecube.flush()
 
@@ -293,7 +291,7 @@ for b in beams:
             continue
 
         # Reads in range of Galactic HI emission channels to exclude, calculates if unspecified:
-        if str(args.chanrange)!='None':
+        if str(args.chanrange) != 'None':
             str_chan_range = args.chanrange.split('-')
             chan_range = int(str_chan_range[0]), int(str_chan_range[1])
         else:
