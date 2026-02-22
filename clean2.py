@@ -1,5 +1,4 @@
 from __future__ import print_function
-import logging
 import os
 
 from modules.natural_cubic_spline import fspline
