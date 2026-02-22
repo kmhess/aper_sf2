@@ -164,6 +164,9 @@ parser.add_argument('-a', "--all",
                     help="Write residual and model cubes as well as the cleaned cubes.",
                     action='store_true')
 
+parser.add_argument('-d', '--directory', default='', required=False,
+                    help='Specify the directory where taskid/field folders live containing the data (default: %(default)s).')
+
 # Parse the arguments above
 args = parser.parse_args()
 njobs = int(args.njobs)
@@ -203,15 +206,10 @@ catParFormt = ("%12s", "%7i", "%10.3f", "%10.3f", "%10.3f", "%7i", "%7i", "%7i",
                "%10.3f", "%10.3f", "%10.3f", "%10.3f", "%10.3f", "%10.3f", "%10.3f", "%12.6f", "%10s", "%7i", "%7i")  #changed taskid from %10i to %10s
 
 prepare = apercal.prepare()
-managefiles.director(prepare, 'ch', taskid)
+managefiles.director(prepare, 'ch', args.directory+'/'+taskid)
 
 for b in beams:
-    # loc = taskid + '/B0' + str(b).zfill(2) + '/'
-    # loc = taskid + '/'
-    mask_loc = 'mos_' + taskid + '/'
-    # print("\t{}".format(loc))
-
-    # managefiles.director(prepare, 'ch', loc)
+    mask_loc = args.directory + '/mos_' + taskid + '/'
 
     for c in cubes:
         cube_name = 'HI_B0' + str(b).zfill(2) + '_cube' + str(c) + '_image'
@@ -219,8 +217,7 @@ for b in beams:
 
         line_cube = cube_name + '.fits'
         beam_cube = beam_name + '_full.fits'   # Update to the expanded beam (deleted later to save space)
-        maskfits = '/mnt/data/' + mask_loc + taskid + '_HIcube' + str(c) + '_image_sofiaFS_mask_bin_dil' + \
-                   str(b).zfill(2) + '_regrid.fits'
+        maskfits = mask_loc + taskid + '_HIcube' + str(c) + '_image_sofiaFS_mask_bin_dil' + str(b).zfill(2) + '_regrid.fits'
         splinefits = cube_name[:-6] + '_spline.fits'
 
         if args.nospline:
