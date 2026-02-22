@@ -71,7 +71,7 @@ def run2(i):
         clean.map = 'map_{:02}_{:02}_{:04}'.format(b, minc, chan[i])
         clean.beam = 'beam_{:02}_{:02}_{:04}'.format(b, minc, chan[i])
         clean.out = 'model_{:02}_{:02}_{:04}'.format(b, minc + 1, chan[i])
-        clean.cutoff = lineimagestats[2] * 0.5
+        clean.cutoff = lineimagestats * 0.5
         clean.niters = 10000
         clean.region = '"mask(mask_{:02}_{:02}_{:04}/)"'.format(b, minc, chan[i])
         clean.go()
@@ -325,9 +325,11 @@ for b in beams:
             mask = np.ones(nchan, dtype=bool)
             if c == 3:
                 mask[376:662] = False
-            lineimagestats = [np.nanmin(f[0].data[mask]), np.nanmax(f[0].data[mask]), np.nanstd(f[0].data[mask])]
+            # lineimagestats = [np.nanmin(f[0].data[mask]), np.nanmax(f[0].data[mask]), np.nanstd(f[0].data[mask])]
+            lineimagestats = np.nanstd(f[0].data[mask])
             f.close()
-            print("\tImage min, max, std: {}".format(lineimagestats[:]))
+            # print("\tImage min, max, std: {}".format(lineimagestats[:]))
+            print("\tImage std: {}".format(lineimagestats))
 
             # Output what exactly is being used to clean the data
             print("\t{}".format(maskfits))
