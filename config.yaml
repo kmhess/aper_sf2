@@ -4,3 +4,4 @@ PATH_TO_DATA: /project/apdw/Data
 PATH_TO_SOFTWARE: /project/apdw/Software
 PATH_TO_CBEAMS: /project/apdw/Software/cbeams
 CHAN_RANGE: None
+PATH_TO_APERCAL: /mnt/software/containers
