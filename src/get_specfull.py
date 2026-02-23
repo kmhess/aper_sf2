@@ -32,11 +32,13 @@ parser.add_argument('-s', '--sources', default='all',
 parser.add_argument('-p', '--prefix', default=None,
                     help='Specify sources to flag if necessary.  Can specify range or list. (default: %(default)s).')
 
+parser.add_argument('-d', '--directory', default='', required=False,
+                    help='Specify the directory where taskid/field folders live containing the data (default: %(default)s).')
+
 ###################################################################
 
 # Parse the arguments above
 args = parser.parse_args()
-
 
 # Range of cubes/sources to work on:
 taskid = args.taskid
@@ -46,7 +48,7 @@ cubes = [int(c) for c in args.cubes.split(',')]
 # else:
 #     prefix = ''
 
-mos_loc = 'mos_' + taskid + '/'
+mos_loc = args.directory + '/mos_' + taskid + '/'
 for c in cubes:
     if not args.prefix:
         filename = taskid + '_HIcube' + str(c) + '_clean_image'

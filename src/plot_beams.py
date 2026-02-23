@@ -19,9 +19,14 @@ parser.add_argument('-t', '--taskid', default='190915041',
 parser.add_argument('-c', '--cubes', default='1,2,3', required=True,
                     help='Specify the cubes on which to do source finding (default: %(default)s).')
 
+parser.add_argument('-w', '--smooth', action='store_true',
+                    help='If option is included apply edits to the smoothed SIP images.')
+
+parser.add_argument('-d', '--directory', default='', required=False,
+                    help='Specify the directory where taskid/field folders live containing the data (default: %(default)s).')
+
 # Parse the arguments above
 args = parser.parse_args()
-# return args
 
 ###################################################################
 
@@ -30,7 +35,9 @@ bmaj_med = []
 bmin = []
 bmin_med = []
 for b in range(40):
-    filename = args.taskid + '/HI_B0'+str(b).zfill(2)+'_cube' + args.cubes + '_spline_clean_image.fits'
+    filename = args.directory + '/' + args.taskid + '/HI_B0'+str(b).zfill(2)+'_cube' + args.cubes + '_spline_clean_image.fits'
+    if args.smooth:
+        filename = args.directory + '/' + args.taskid + '/HI_B0'+str(b).zfill(2)+'_cube' + args.cubes + '_spline_clean_smooth_image.fits'
     if os.path.isfile(filename):
         file = fits.open(filename)
         if file[0].header.get('BMAJ'):
@@ -76,4 +83,8 @@ ax2b.set_ylabel("Median per beam")
 ax2.legend(loc=2)
 ax2b.legend(loc=1)
 
-fig.savefig('mos_{0}/{0}_beams_cube{1}.png'.format(args.taskid, args.cubes[0]), bbox_inches='tight')
+outfile = args.directory + '/mos_' + args.taskid + '/' + args.taskid + '_beams_cube' + args.cubes[0] + '.png'
+if args.smooth:
+    outfile = args.directory + '/mos_' + args.taskid + '/' + args.taskid + '_beams_cube' + args.cubes[0] + '_smooth.png'    
+
+fig.savefig(outfile, bbox_inches='tight')

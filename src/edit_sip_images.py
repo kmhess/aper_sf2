@@ -31,6 +31,9 @@ parser.add_argument('-s', '--sources', default='all',
 parser.add_argument('-w', '--smooth', action='store_true',
                     help='If option is included apply edits to the smoothed SIP images.')
 
+parser.add_argument('-d', '--directory', default='', required=False,
+                    help='Specify the directory where taskid/field folders live containing the data (default: %(default)s).')
+
 ###################################################################
 
 # Parse the arguments above
@@ -44,7 +47,7 @@ font = 'DejaVuSans.ttf'
 taskid = args.taskid
 cubes = [int(c) for c in args.cubes.split(',')]
 
-mos_loc = 'mos_' + taskid + '/'
+mos_loc = args.directory + '/mos_' + taskid + '/'
 for c in cubes:
     old_filename = taskid + '_HIcube' + str(c) + '_image'
     filename = taskid + '_HIcube' + str(c) + '_clean_image'

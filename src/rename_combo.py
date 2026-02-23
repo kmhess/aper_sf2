@@ -22,6 +22,9 @@ parser.add_argument('-p', '--prefix', default=None,
 parser.add_argument('-w', '--smooth', action='store_true',
                     help='If option is included apply edits to the smoothed SIP images.')
 
+parser.add_argument('-d', '--directory', default='', required=False,
+                    help='Specify the directory where taskid/field folders live containing the data (default: %(default)s).')
+
 ###################################################################
 
 # Parse the arguments above
@@ -35,7 +38,7 @@ if args.prefix:
 else:
     prefix = ''
 
-mos_loc = 'mos_' + taskid + '/'
+mos_loc = args.directory + '/mos_' + taskid + '/'
 for c in cubes:
     filename = taskid + '_HIcube' + str(c) + '_clean_image'
     if args.smooth:
