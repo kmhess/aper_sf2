@@ -15,15 +15,10 @@ wildcard_constraints:
 
 rule all:
     input:
-        DATA+"/mos_" + FIELD + "/rename_cube"+CUBE+".txt",
+        DATA+"/mos_"+FIELD+"/rename_cube"+CUBE+".txt",
         DATA+"/mos_"+FIELD+"/"+FIELD+"_beams_cube"+CUBE+".png",
-        DATA+"/mos_" + FIELD + "/sm_rename_cube"+CUBE+".txt",
-        DATA+"/mos_"+FIELD+"/sm_"+FIELD+"_beams_cube"+CUBE+".png"
-        
-        # expand(DATA+"/"+FIELD+"/HI_B0{beam}_cube"+CUBE+".txt", beam=beams),
-        # DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image.fits",
-        # DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_noise.fits",
-        # DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_weights.fits",
+        DATA+"/mos_"+FIELD+"/sm_rename_cube"+CUBE+".txt",
+        DATA+"/mos_"+FIELD+"/"+FIELD+"_beams_cube"+CUBE+"_smooth.png"
 
 rule make_bin_mask:
     input:
@@ -146,7 +141,7 @@ rule generate_full_spec:
     threads:
         1
     shell:
-        "python3 "+SOFTWARE+"/aper_sf2/src/get_specfull.py -t "+FIELD+" -c "+CUBE+"; "
+        "python3 "+SOFTWARE+"/aper_sf2/src/get_specfull.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+"; "
         "touch {output}"
 
 rule run_sip:
@@ -158,7 +153,7 @@ rule run_sip:
     threads:
         1
     shell:
-        "sofia_image_pipeline -c {input[0]} -s panstarrs 'GALEX Near UV' -i 5 -m; "
+        "sofia_image_pipeline -c {input[0]} -s panstarrs -i 5 -m; "
         "touch {output}"
 
 rule edit_sip_figs:
@@ -169,18 +164,18 @@ rule edit_sip_figs:
     threads:
         1
     shell:
-        "python3 "+SOFTWARE+"/aper_sf2/src/edit_sip_images.py -t "+FIELD+" -c "+CUBE+"; "
+        "python3 "+SOFTWARE+"/aper_sf2/src/edit_sip_images.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+"; "
         "touch {output}"
 
 rule rename_pngs:
     input:
-        DATA+"/mos_" + FIELD + "/sip_cube"+CUBE+"_edit.txt"
+        DATA+"/mos_"+ FIELD+"/sip_cube"+CUBE+"_edit.txt"
     output:
-        DATA+"/mos_" + FIELD + "/rename_cube"+CUBE+".txt"
+        DATA+"/mos_"+ FIELD+"/rename_cube"+CUBE+".txt"
     threads:
         1
     shell:
-        "python3 "+SOFTWARE+"/aper_sf2/src/rename_combo.py -t " + FIELD + " -c "+CUBE+"; "
+        "python3 "+SOFTWARE+"/aper_sf2/src/rename_combo.py -d "+DATA+" -t " + FIELD + " -c "+CUBE+"; "
         "touch {output}"
 
 rule generate_psf_stats:
@@ -192,8 +187,8 @@ rule generate_psf_stats:
     threads:
         1
     shell:
-        "python3 "+SOFTWARE+"/aper_sf2/src/record_beams.py -t "+FIELD+" -c "+CUBE+"; "
-        "python3 "+SOFTWARE+"/aper_sf2/src/plot_beams.py -t "+FIELD+" -c "+CUBE
+        "python3 "+SOFTWARE+"/aper_sf2/src/record_beams.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+"; "
+        "python3 "+SOFTWARE+"/aper_sf2/src/plot_beams.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+"; "
 
 rule smooth:
     input:
@@ -205,7 +200,7 @@ rule smooth:
     threads:
         4
     shell:
-        "python "+SOFTWARE+"/aper_sf2/src/smooth_wa2.py -t "+FIELD+" -b {wildcards.bm} -c "+CUBE+" -j {threads}"
+        "python "+SOFTWARE+"/aper_sf2/src/smooth_wa2.py -d "+DATA+" -t "+FIELD+" -b {wildcards.bm} -c "+CUBE+" -j {threads}"
 
 rule generate_smooth_pb:
     input:
@@ -252,7 +247,7 @@ rule dilmask_smooth:
     threads:
         workflow.cores
     shell:
-        "python "+SOFTWARE+"/aper_sf2/src/dilate_binmask.py -t "+FIELD+" -c "+CUBE+" -f {input[1]} -s sm"
+        "python "+SOFTWARE+"/aper_sf2/src/dilate_binmask.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+" -f {input[1]} -s sm"
 
 rule run_sofia_smooth:
     input:
@@ -277,13 +272,12 @@ rule generate_full_spec_smooth:
     threads:
         1
     shell:
-        "python3 "+SOFTWARE+"/aper_sf2/src/get_specfull.py -t "+FIELD+" -c "+CUBE+" -p sm; "
+        "python3 "+SOFTWARE+"/aper_sf2/src/get_specfull.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+" -p sm; "
         "touch {output}"
 
 rule run_sip_smooth:
     input:
         DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_cat.xml",
-        # "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image.fits",
         DATA+"/mos_"+FIELD+"/sm_specfull_cube"+CUBE+".txt"
     output:
         DATA+"/mos_"+FIELD+"/sm_sip_cube"+CUBE+".txt"
@@ -291,7 +285,6 @@ rule run_sip_smooth:
         1
     shell:
         "sofia_image_pipeline -c {input[0]} -s panstarrs -i 5 -m; "
-        #"sofia_image_pipeline -c {input[0]} -s 'DSS2 Blue' 'GALEX Near UV' -i 5 -m; "
         "touch {output}"
 
 rule edit_sip_figs_smooth:
@@ -302,27 +295,26 @@ rule edit_sip_figs_smooth:
     threads:
         1
     shell:
-        "python3 "+SOFTWARE+"/aper_sf2/src/edit_sip_images.py -t "+FIELD+" -c "+CUBE+" -w; "
+        "python3 "+SOFTWARE+"/aper_sf2/src/edit_sip_images.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+" -w; "
         "touch {output}"
 
 rule rename_pngs_smooth:
     input:
-        DATA+"/mos_" + FIELD + "/sm_sip_cube"+CUBE+"_edit.txt"
+        DATA+"/mos_"+FIELD+"/sm_sip_cube"+CUBE+"_edit.txt"
     output:
-        DATA+"/mos_" + FIELD + "/sm_rename_cube"+CUBE+".txt"
+        DATA+"/mos_"+FIELD+"/sm_rename_cube"+CUBE+".txt"
     shell:
-        "python3 "+SOFTWARE+"/aper_sf2/src/rename_combo.py -t " + FIELD + " -c "+CUBE+" -p sm -w; "
+        "python3 "+SOFTWARE+"/aper_sf2/src/rename_combo.py -d "+DATA+" -t " + FIELD + " -c "+CUBE+" -p sm -w; "
         "touch {output}"
 
 rule generate_psf_stats_smooth:
     input:
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_cat.txt"#,
-        # DATA+"/mos_"+FIELD+"/sm_rename_cube"+CUBE+".txt"
+        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_cat.txt"
     output:
-        DATA+"/mos_"+FIELD+"/sm_"+FIELD+"_beams_cube"+CUBE+".png"
+        DATA+"/mos_"+FIELD+"/"+FIELD+"_beams_cube"+CUBE+"_smooth.png"
     threads:
         1
     run:
-        shell("python3 "+SOFTWARE+"/aper_sf2/src/record_beams.py -t "+FIELD+" -c "+CUBE+"; ")
-        shell("python3 "+SOFTWARE+"/aper_sf2/src/plot_beams.py -t "+FIELD+" -c "+CUBE)
+        shell("python3 "+SOFTWARE+"/aper_sf2/src/record_beams.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+" -w; ")
+        shell("python3 "+SOFTWARE+"/aper_sf2/src/plot_beams.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+" -w; ")
         shell("rm -rf "+DATA+"/mos_"+FIELD+"/*bin*")
