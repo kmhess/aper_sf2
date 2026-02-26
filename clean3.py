@@ -23,7 +23,7 @@ def run(i):
 
     try:
         # Do the spline fitting on the z-axis to masked cube
-        fit = fspline(np.linspace(1, orig_data.shape[0], orig_data.shape[0]),
+        fit = fspline(np.linspace(1, new_splinecube_data.shape[0], new_splinecube_data.shape[0]),
                       np.nan_to_num(new_splinecube_data[:, x[i], y[i]]), k=5)
         return fit
 
@@ -219,18 +219,14 @@ for b in beams:
             if (not args.nospline) & ((not os.path.isfile(splinefits)) | args.overwrite):
 
                 print("[CLEAN3] Splinefit while avoiding sources for Beam {:02}, Cube {}.".format(b, c))
-                os.system('cp {} {}'.format(line_cube, splinefits))
-                print("\t{}".format(splinefits))
-                new_splinecube = pyfits.open(splinefits, memmap=True)
+                print("\t{}".format(line_cube))
+                new_splinecube = pyfits.open(line_cube, memmap=True)
                 maskcube = pyfits.open(maskfits)
-                orig = pyfits.open(line_cube, memmap=True)
-                orig_data = orig[0].data
                 new_splinecube_data = new_splinecube[0].data
                 new_splinecube_data[maskcube[0].data > 0] = 0.0
                 maskcube.close()
 
                 # Close original cube here to free up data 
-                orig.close()
                 new_splinecube.close()
 
                 ################################################
@@ -242,7 +238,7 @@ for b in beams:
                 print(" - " + str(ncases) + " cases found")
 
                 # Set chunksize to something which ncases is divisible by 
-                chunksize=orig_data.shape[1]
+                chunksize = new_splinecube_data.shape[1]
 
                 if njobs > 1:
                     print(" - Running in parallel mode (" + str(njobs) + " jobs simultaneously)")
@@ -266,10 +262,11 @@ for b in beams:
 
                 # Write the fit subtracted data to the file
                 for i in range(ncases):
-                    new_splinecube_data[:,x[i],y[i]] = orig_data[:,x[i],y[i]] - fits_list[i]
+                    new_splinecube_data[:,x[i],y[i]] = new_splinecube_data[:,x[i],y[i]] - fits_list[i]
 
                 # Updating the Splinecube file with the new data
                 print(" - Updating the Splinecube file")
+                os.system('cp {} {}'.format(line_cube, splinefits))
                 new_splinecube = pyfits.open(splinefits, mode='update')
                 new_splinecube[0].data = new_splinecube_data
                 new_splinecube.flush()
@@ -345,16 +342,14 @@ for b in beams:
                 print("[CLEAN3] Initialize clean, model, and residual cubes")
             else:
                 print("[CLEAN3] Initialize clean cube")
-            os.system('cp {} {}'.format(dirty_cube, new_cleanfits))
-            print("\t{}".format(new_cleanfits))
-            new_cleancube = pyfits.open(new_cleanfits, memmap=True)
+            print("\t{}".format(dirty_cube))
+            new_cleancube = pyfits.open(dirty_cube, memmap=True)
             new_cleancube_data = new_cleancube[0].data
             new_cleancube.close()
 
             if args.all:
                 new_modelfits = outcube + '_model.fits'
-                os.system('cp {} {}'.format(dirty_cube, new_modelfits))
-                pre_model = pyfits.open(new_modelfits, mode='update')
+                pre_model = pyfits.open(dirty_cube, mode='update')
                 pre_model[0].data = pre_model[0].data * np.nan
                 pre_model.flush()
                 pre_model.close()
@@ -363,9 +358,8 @@ for b in beams:
                 new_modelcube_data = new_modelcube[0].data
 
                 new_residualfits = outcube + '_residual.fits'
-                os.system('cp {} {}'.format(dirty_cube, new_residualfits))
                 print("\t{}".format(new_residualfits))
-                new_residualcube = pyfits.open(new_residualfits, memmap=True)
+                new_residualcube = pyfits.open(dirty_cube, memmap=True)
                 new_residualcube_data = new_residualcube[0].data
                 
                 new_modelcube.close()
@@ -414,6 +408,7 @@ for b in beams:
 
             # Updating the clean file with the new data
             print(" - Updating the clean file")
+            os.system('cp {} {}'.format(dirty_cube, new_cleanfits))
             new_cleancube = pyfits.open(new_cleanfits, mode='update')
             new_cleancube[0].data = new_cleancube_data
 
@@ -423,8 +418,10 @@ for b in beams:
                     new_modelcube_data[chan[i],:,:] = model_out[i]
                     print(" - Updating the residual file")
                     new_residualcube_data[chan[i],:,:] = residual_out[i]
+                os.system('cp {} {}'.format(dirty_cube, new_modelfits))
                 new_modelcube = pyfits.open(new_modelfits, mode='update')
                 new_modelcube[0].data = new_modelcube_data
+                os.system('cp {} {}'.format(dirty_cube, new_residualfits))
                 new_residualcube = pyfits.open(new_residualfits, mode='update')
                 new_residualcube[0].data = new_residualcube_data
 
