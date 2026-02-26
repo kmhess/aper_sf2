@@ -69,6 +69,7 @@ def run2(i):
         restor.go()
     except RuntimeError:
         print("\tProblems RESTORing data for channel {}.".format(chan[i]))
+        clean_im = np.nan
 
     try:
         # print("[CLEAN3] Making residual cube.")
@@ -93,8 +94,8 @@ def run2(i):
         print("Problems writing data to FITS for channel {}. Check miriad files instead.".format(chan[i]))
 
     try:
-        clean_im = pyfits.getdata('image_{:02}_{:02}_{:04}.fits'.format(b, minc + 1, chan[i]))
         model_im, residual_im = np.nan, np.nan
+        clean_im = pyfits.getdata('image_{:02}_{:02}_{:04}.fits'.format(b, minc + 1, chan[i]))
         if args.all:
             model_im = pyfits.getdata('model_{:02}_{:02}_{:04}.fits'.format(b, minc + 1, chan[i]))
             residual_im = pyfits.getdata('residual_{:02}_{:02}_{:04}.fits'.format(b, minc + 1, chan[i]))
