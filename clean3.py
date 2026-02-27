@@ -262,13 +262,13 @@ for b in beams:
                     pool.terminate()
 
                 # Write the fit subtracted data to the file
+                os.system('cp {} {}'.format(line_cube, splinefits))
+                new_splinecube = pyfits.open(splinefits, mode='update')
                 for i in range(ncases):
-                    new_splinecube_data[:,x[i],y[i]] = new_splinecube_data[:,x[i],y[i]] - fits_list[i]
+                    new_splinecube_data[:,x[i],y[i]] = new_splinecube[0].data[:,x[i],y[i]] - fits_list[i]
 
                 # Updating the Splinecube file with the new data
                 print(" - Updating the Splinecube file")
-                os.system('cp {} {}'.format(line_cube, splinefits))
-                new_splinecube = pyfits.open(splinefits, mode='update')
                 new_splinecube[0].data = new_splinecube_data
                 new_splinecube.flush()
 
