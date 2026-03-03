@@ -112,7 +112,7 @@ rule make_mosaic_clean:
     run:
         input = list(input)
         mos_params = " ".join([i.split("/")[-1] for i in input if "spline_clean_image" in i])
-        os.system('mosaic-queen -mc 0.1 -n '+FIELD+'_HIcube'+CUBE+'_clean -i '+FIELD+' -o mos_'+FIELD+' -t '+mos_params+' -r')
+        os.system('mosaic-queen -mc 0.1 -n '+FIELD+'_HIcube'+CUBE+'_clean -i '+DATA+'/'+FIELD+' -o '+DATA+'/mos_'+FIELD+' -t '+mos_params+' -r')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*imageR*')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*pbR*')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*image_fields*')
@@ -130,7 +130,7 @@ rule run_sofia_clean:
     threads:
         10  # Same as what's coded into the template file.  No advantage of going higher because only applying existing mask.
     shell:
-        "/usr/bin/sofia "+SOFTWARE+"/aper_sf2/sofia_final_template.par input.data={input[0]} input.mask={input[1]}"
+        "sofia "+SOFTWARE+"/aper_sf2/sofia_final_template.par input.data={input[0]} input.mask={input[1]}"
 
 rule generate_full_spec:
     input:
@@ -230,7 +230,7 @@ checkpoint make_mosaic_smooth:
     run:
         input = list(input)
         mos_params = " ".join([i.split("/")[-1] for i in input if "spline_clean_smooth_image" in i])
-        os.system('mosaic-queen -mc 0.1 -n '+FIELD+'_HIcube'+CUBE+'_clean_smooth -i '+FIELD+' -o mos_'+FIELD+' -t '+mos_params+' -r')
+        os.system('mosaic-queen -mc 0.1 -n '+FIELD+'_HIcube'+CUBE+'_clean_smooth -i '+DATA+'/'+FIELD+' -o '+DATA+'/mos_'+FIELD+' -t '+mos_params+' -r')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*imageR*')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*pbR*')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*image_fields*')
@@ -261,7 +261,7 @@ rule run_sofia_smooth:
     threads:
         10  # Same as what's coded into the template file.  No advantage of going higher because only applying existing mask.
     shell:
-        "/usr/bin/sofia "+SOFTWARE+"/aper_sf2/sofia_final_template.par input.data={input[0]} input.mask={input[1]}"
+        "sofia "+SOFTWARE+"/aper_sf2/sofia_final_template.par input.data={input[0]} input.mask={input[1]}"
 
 rule generate_full_spec_smooth:
     input:
