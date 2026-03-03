@@ -3,9 +3,9 @@ TNH, created 10/21/2025
 Script to make and run and slurm script to run an input field through the Apertif data reduction pipeline (up until first source finding).
 Assumes the data is staged and stored in the /project/apdw/Data/ directory.
 
-Usage: python make_pipeline_slurm_tnake.py <FIELD_NAME>
-Example: python make_pipeline_slurm_tnake.py S1021+5815
-    or:  python make_pipeline_slurm_tnake.py S1021+5815
+Usage: python run_pipeline_slurm_tnake.py <FIELD_NAME>
+Example: python run_pipeline_slurm_tnake.py S1021+5815
+    or:  python run_pipeline_slurm_tnake.py S1021+5815
 '''
 
 import os, sys
