@@ -85,7 +85,12 @@ for c in cubes:
     cube_name = taskid + '_HIcube' + str(c) + '_image'
     # Take modified catalogs based on first inspection of source quality
     catalog_file = loc + cube_name + '_sofiaFS_cat_edit.txt'
-    catalog = ascii.read(catalog_file, header_start=18)
+    try:#added by TNH 02/16/2026 to generalize to file format without full header
+        catalog = ascii.read(catalog_file)
+        catalog['id']
+    except KeyError:
+        catalog = ascii.read(catalog_file, header_start=18)
+        catalog['id']
 
     # Change behavior so 'all' refers to all in catalog, rather than all in image (unedited catalog)
     if sources == 'all':
