@@ -183,7 +183,7 @@ output.writeCubelets       =  true
 output.marginCubelets      =  10
 output.thresholdMom12      =  0.0
 output.overwrite           =  true
-
+output.writePV             =  true
 
 # Updated parameters
 
