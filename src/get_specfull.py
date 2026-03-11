@@ -74,6 +74,19 @@ for c in cubes:
     for s in sources:
         # outfile = mos_loc + prefix + filename + '_figures/' + filename + '_' + str(s) + '_specfull.txt'
         outfile = mos_loc + filename + '_figures/' + filename + '_' + str(s) + '_specfull.txt'
+
+        #fetching right units from spec.txt file
+        spec_template = ascii.read(mos_loc + filename + '_cubelets/' + filename + '_{}_spec.txt'.format(str(s)),
+                                   names=['chan', 'col2', 'f_sum', 'n_pix'])
+        ll = 0
+        while not ('f_sum' in spec_template.meta['comments'][ll] and 'chan' in spec_template.meta['comments'][ll] and
+                'n_pix' in spec_template.meta['comments'][ll]):
+            ll += 1
+        col_names = spec_template.meta['comments'][ll].split()
+        units_ = spec_template.meta['comments'][ll+1].split()
+        f_sum_units = (spec_template.meta['comments'][ll+1].split()[spec_template.meta['comments'][ll].split().index('f_sum')])
+        units_[2] = 'Jy/beam' #setting f_sum units to Jy/beam so SIP can convert to Jy before plotting
+
         if not os.path.isfile(outfile):
             src_hdu = fits.open(mos_loc + filename + '_cubelets/' + filename + '_' + str(s) + '_mask.fits')
             mask2d = np.sum(src_hdu[0].data, axis=0)
@@ -98,7 +111,9 @@ for c in cubes:
                 f.write("# The source spectrum, with noise, is calculated by integrating over\n")
                 f.write("# the 2D mask of the source in every channel.  This means every row \n")
                 f.write("# has the same number of contributing pixels and the noise is the same\n")
-                f.write("# for every point.\n")
+                f.write("# for every point. Units for each colum are as follows:\n")
+                f.write("# "+"\t".join('{}'.format(c) for c in col_names)+"\n")
+                f.write("# "+"\t".join('{}'.format(n) for n in units_)+"\n")
                 f.write("# \n")
 
                 ascii.write([channels, frequency, spectrum, n_pix], f'temp2{code}.txt', format='fixed_width_two_line',
