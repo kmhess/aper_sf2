@@ -1,0 +1,174 @@
+# https://stackoverflow.com/questions/66466082/how-do-i-write-a-snakemake-input-when-not-all-jobs-successfully-output-files-fro
+
+import os
+
+configfile: "config.yaml"
+FIELD = config['FIELD']
+CUBE = str(config['CUBE'])
+
+wildcard_constraints:
+    beams="\d+"
+
+rule all:
+    input:
+        "mos_" + FIELD + "/final_sm_rename_cube"+CUBE+".txt",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin_dil_sm.fits",
+        "mos_" + FIELD + "/final_rename_cube"+CUBE+".txt",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin_dil.fits"
+
+rule make_bin_mask_fullres:
+    input:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask.fits"
+    output:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin.fits"
+    shell:
+        "python3 /mnt/scratch/stuff/aper_sf2/src/binary_mask.py -t "+FIELD+" -c "+CUBE+" -j 10"
+
+rule dilate_mask_fullres:
+    input:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin.fits"
+    output:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin_dil.fits"
+    shell:
+        "python3 /mnt/scratch/stuff/aper_sf2/src/dilate_binmask.py -t "+FIELD+" -c "+CUBE+" -j 10"
+
+rule sofia_final_fullres:
+    input:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image.fits",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin_dil.fits"
+    output:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_cat.txt",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_cat.xml",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_mask-2d.fits",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_mask.fits"
+    shell:
+        "rm -rf mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_cubelets/; "
+        "/usr/bin/sofia ../scratch/stuff/aper_sf2/sofia_final_template.par input.data={input[0]} input.mask={input[1]}"
+
+rule generate_full_spec_fullres:
+    input:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image.fits",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_cat.xml"
+    output:
+        "mos_"+FIELD+"/final_specfull_cube"+CUBE+".txt"
+    shell:
+        "rm -rf mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_figures/; "
+        "python3 ../scratch/stuff/aper_sf2/src/get_specfull.py -t "+FIELD+" -c "+CUBE+"; "
+        "touch {output}"
+
+rule run_sip_fullres:
+    input:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_cat.xml",
+        "mos_"+FIELD+"/final_specfull_cube"+CUBE+".txt"
+    output:
+        "mos_"+FIELD+"/final_sip_cube"+CUBE+".txt"
+    shell:
+        "sofia_image_pipeline -c {input[0]} -s panstarrs 'DSS2 Blue' 'GALEX Near UV' -i 5 -m; "
+        "touch {output}"
+
+rule edit_sip_figs_fullres:
+    input:
+        "mos_"+FIELD+"/final_sip_cube"+CUBE+".txt"
+    output:
+        "mos_"+FIELD+"/final_sip_cube"+CUBE+"_edit.txt"
+    shell:
+        "python3 ../scratch/stuff/aper_sf2/src/edit_sip_images.py -t "+FIELD+" -c "+CUBE+"; "
+        "touch {output}"
+
+rule rename_pngs_fullres:
+    input:
+        "mos_" + FIELD + "/final_sip_cube"+CUBE+"_edit.txt"
+    output:
+        "mos_" + FIELD + "/final_rename_cube"+CUBE+".txt"
+    shell:
+        "python3 ../scratch/stuff/aper_sf2/src/rename_combo.py -t " + FIELD + " -c "+CUBE+"; "
+        "touch {output}"
+
+
+#Need to check if fully smoothed mosaic in all channels exists!!  If it does:
+
+rule dilate_mask_smooth:
+    input:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image.fits",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin_dil.fits"
+    output:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin_dil_sm.fits"
+    shell:
+        "python ../scratch/stuff/aper_sf2/src/dilate_binmask.py -t "+FIELD+" -c "+CUBE+" -f {input[1]} -s sm"
+
+rule sofia_final_smooth:
+    input:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image.fits",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin_dil_sm.fits"
+    output:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_cat.txt",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_cat.xml",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_mask-2d.fits",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_mask.fits"
+    shell:
+        "/usr/bin/sofia ../scratch/stuff/aper_sf2/sofia_final_template.par input.data={input[0]} input.mask={input[1]}"
+
+rule generate_full_spec_smooth:
+    input:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image.fits",
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_cat.xml"
+    output:
+        "mos_"+FIELD+"/final_sm_specfull_cube"+CUBE+".txt"
+    shell:   # ADD PREFIX OPTION HERE!  Done?  Unnecessary?
+        "rm -rf mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_figures/; "
+        "python3 ../scratch/stuff/aper_sf2/src/get_specfull.py -t "+FIELD+" -c "+CUBE+" -p sm; "
+        "touch {output}"
+
+rule run_sip_smooth:
+    input:
+        "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_cat.xml",
+        # "mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image.fits",
+        "mos_"+FIELD+"/final_sm_specfull_cube"+CUBE+".txt"
+    output:
+        "mos_"+FIELD+"/final_sm_sip_cube"+CUBE+".txt"
+    shell:
+        "sofia_image_pipeline -c {input[0]} -s panstarrs -i 5 -m; "
+        #"sofia_image_pipeline -c {input[0]} -s 'DSS2 Blue' 'GALEX Near UV' -i 5 -m; "
+        "touch {output}"
+
+rule edit_sip_figs_smooth:
+    input:
+        "mos_"+FIELD+"/final_sm_sip_cube"+CUBE+".txt"
+    output:
+        "mos_"+FIELD+"/final_sm_sip_cube"+CUBE+"_edit.txt"
+    shell:
+        "python3 ../scratch/stuff/aper_sf2/src/edit_sip_images.py -t "+FIELD+" -c "+CUBE+" -w; "
+        "touch {output}"
+
+rule rename_pngs_smooth:
+    input:
+        "mos_" + FIELD + "/final_sm_sip_cube"+CUBE+"_edit.txt"
+    output:
+        "mos_" + FIELD + "/final_sm_rename_cube"+CUBE+".txt"
+    shell:  # ADD PREFIX OPTION HERE! Done
+        "python3 ../scratch/stuff/aper_sf2/src/rename_combo.py -t " + FIELD + " -c "+CUBE+" -p sm -w; "
+        "touch {output}"
+
+rule clean_up:
+    input:
+        "mos_" + FIELD + "/final_rename_cube"+CUBE+".txt"
+        "mos_" + FIELD + "/final_sm_rename_cube"+CUBE+".txt"
+    output:
+        DATA+"/mos_"+FIELD+"/cleanup_cube"+CUBE+".txt"
+    shell:
+        "rm -rf "+DATA+"/"+FIELD+"/HI_B0{bm}_cube"+CUBE+"_pb.fits; "
+        "rm -rf "+DATA+"/"+FIELD+"/HI_B0{bm}_cube"+CUBE+"_spline.fits; "
+        "rm -rf "+DATA+"/"+FIELD+"/HI_B0{bm}_cube"+CUBE+"_spline_clean_pb.fits; "
+        "rm -rf "+DATA+"/"+FIELD+"/HI_B0{bm}_cube"+CUBE+"_spline_clean_smooth_pb.fits; "
+        "rm -rf "+DATA+"/mos_"+FIELD+"/*filtered.fits; "
+        "rm -rf "+DATA+"/mos_"+FIELD+"/*filtered_spline.fits; "
+        "fpack "+DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_noise.fits; "
+        "fpack "+DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_weights.fits; "
+        "fpack "+DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask.fits; "
+        "fpack "+DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_noise.fits; "
+        "fpack "+DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_weights.fits; "
+        "fpack "+DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_mask.fits; "
+        "fpack "+DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_noise.fits; "
+        "fpack "+DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_weights.fits; "
+        "fpack "+DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_mask.fits; "
+        "touch {output}"
