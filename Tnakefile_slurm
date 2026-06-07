@@ -46,7 +46,7 @@ rule regrid_masks:
     threads:
         7
 #        #5  # Normal
-#        3  # MDS fields (should really be doing this with memory allocation not threads
+#        3  # MDS fields (should really be doing this with memory allocation not threads)
     resources:
         mem_mb = 55000
     shell:
@@ -116,8 +116,6 @@ rule make_mosaic_clean:
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*imageR*')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*pbR*')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*image_fields*')
-        os.system('rm -rf '+DATA+'/'+FIELD+'/HI_B0{bm}_cube'+CUBE+'_spline_clean_pb.fits')
-        os.system('rm -rf '+DATA+'/'+FIELD+'/HI_B0{bm}_cube'+CUBE+'_spline.fits')
 
 rule run_sofia_clean:
     input:
@@ -234,7 +232,6 @@ checkpoint make_mosaic_smooth:
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*imageR*')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*pbR*')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*image_fields*')
-        os.system('rm -rf '+DATA+'/'+FIELD+'/*spline_clean_smooth_pb.fits')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*regrid*')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*hdr')
 
