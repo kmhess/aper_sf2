@@ -116,6 +116,11 @@ rule make_mosaic_clean:
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*imageR*')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*pbR*')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*image_fields*')
+<<<<<<< HEAD
+=======
+        os.system('rm -rf '+DATA+'/'+FIELD+'/*_spline_clean_pb.fits')
+        os.system('rm -rf '+DATA+'/'+FIELD+'/*_spline.fits')
+>>>>>>> origin/master
 
 rule run_sofia_clean:
     input:
