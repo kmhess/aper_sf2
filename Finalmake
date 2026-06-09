@@ -17,10 +17,6 @@ wildcard_constraints:
 rule all:
     input:
         DATA+"/mos_"+FIELD+"/cleanup_cube"+CUBE+".txt"
-        # DATA+"/mos_" + FIELD + "/final_sm_rename_cube"+CUBE+".txt",
-        # DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin_dil_sm.fits",
-        # DATA+"/mos_" + FIELD + "/final_rename_cube"+CUBE+".txt",
-        # DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin_dil.fits"
 
 rule make_bin_mask_fullres:
     input:
@@ -48,7 +44,7 @@ rule sofia_final_fullres:
         DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_mask-2d.fits",
         DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_mask.fits"
     shell:
-        "rm -rf DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_cubelets/; "
+        "rm -rf "+DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_cubelets/; "
         "sofia "+SOFTWARE+"/aper_sf2/sofia_final_template.par input.data={input[0]} input.mask={input[1]}"
 
 rule add_beam2source_fullres:
@@ -74,6 +70,7 @@ rule generate_specfull_fullres:
 rule run_sip_fullres:
     input:
         DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_cat.xml",
+        DATA+"/mos_"+FIELD+"/final_beam2source_cube"+CUBE+".txt",
         DATA+"/mos_"+FIELD+"/final_specfull_cube"+CUBE+".txt"
     output:
         DATA+"/mos_"+FIELD+"/final_sip_cube"+CUBE+".txt"
@@ -143,6 +140,7 @@ rule generate_full_spec_smooth:
 rule run_sip_smooth:
     input:
         DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_cat.xml",
+        DATA+"/mos_"+FIELD+"/final_sm_beam2source_cube"+CUBE+".txt",
         DATA+"/mos_"+FIELD+"/final_sm_specfull_cube"+CUBE+".txt"
     output:
         DATA+"/mos_"+FIELD+"/final_sm_sip_cube"+CUBE+".txt"
@@ -170,15 +168,17 @@ rule rename_pngs_smooth:
 
 rule clean_up:
     input:
-        DATA+"/mos_" + FIELD + "/final_rename_cube"+CUBE+".txt"
-        DATA+"/mos_" + FIELD + "/final_sm_rename_cube"+CUBE+".txt"
+        DATA+"/mos_"+FIELD+"/final_beam2source_cube"+CUBE+".txt",
+        DATA+"/mos_"+FIELD+"/final_rename_cube"+CUBE+".txt",
+        DATA+"/mos_"+FIELD+"/final_sm_beam2source_cube"+CUBE+".txt",
+        DATA+"/mos_"+FIELD+"/final_sm_rename_cube"+CUBE+".txt"
     output:
         DATA+"/mos_"+FIELD+"/cleanup_cube"+CUBE+".txt"
     shell:
-        "rm -rf "+DATA+"/"+FIELD+"/HI_B0{bm}_cube"+CUBE+"_pb.fits; "
-        "rm -rf "+DATA+"/"+FIELD+"/HI_B0{bm}_cube"+CUBE+"_spline.fits; "
-        "rm -rf "+DATA+"/"+FIELD+"/HI_B0{bm}_cube"+CUBE+"_spline_clean_pb.fits; "
-        "rm -rf "+DATA+"/"+FIELD+"/HI_B0{bm}_cube"+CUBE+"_spline_clean_smooth_pb.fits; "
+        "rm -rf "+DATA+"/"+FIELD+"/HI_B0*_cube"+CUBE+"_pb.fits; "
+        "rm -rf "+DATA+"/"+FIELD+"/HI_B0*_cube"+CUBE+"_spline.fits; "
+        "rm -rf "+DATA+"/"+FIELD+"/HI_B0*_cube"+CUBE+"_spline_clean_pb.fits; "
+        "rm -rf "+DATA+"/"+FIELD+"/HI_B0*_cube"+CUBE+"_spline_clean_smooth_pb.fits; "
         "rm -rf "+DATA+"/mos_"+FIELD+"/*filtered.fits; "
         "rm -rf "+DATA+"/mos_"+FIELD+"/*filtered_spline.fits; "
         "fpack "+DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_noise.fits; "
