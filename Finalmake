@@ -48,14 +48,23 @@ rule sofia_final_fullres:
         "rm -rf DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_cubelets/; "
         "sofia "+SOFTWARE+"/aper_sf2/sofia_final_template.par input.data={input[0]} input.mask={input[1]}"
 
-rule generate_full_spec_fullres:
+rule add_beam2source_fullres:
+    input:
+        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_cat.txt"
+    output:
+        DATA+"/mos_"+FIELD+"/final_beam2source_cube"+CUBE+".txt"
+    shell:
+        "python3 "+SOFTWARE+"/aper_cube_stack/modules/beam2source.py -c "+CUBE+" -f {input} -p "+CBEAMS+" -d "+DATA+"; "
+        "touch {output}"
+
+rule generate_specfull_fullres:
     input:
         DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image.fits",
         DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_cat.xml"
     output:
         DATA+"/mos_"+FIELD+"/final_specfull_cube"+CUBE+".txt"
     shell:
-        "rm -rf DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_figures/; "
+        "rm -rf "+DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_figures/; "
         "python3 "+SOFTWARE+"/aper_sf2/src/get_specfull.py -t "+FIELD+" -c "+CUBE+"; "
         "touch {output}"
 
@@ -108,6 +117,15 @@ rule sofia_final_smooth:
     shell:
         "sofia "+SOFTWARE+"/aper_sf2/sofia_final_template.par input.data={input[0]} input.mask={input[1]}"
 
+rule add_beam2source_smooth:
+    input:
+        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_cat.txt"
+    output:
+        DATA+"/mos_"+FIELD+"/final_sm_beam2source_cube"+CUBE+".txt"
+    shell:
+        "python3 "+SOFTWARE+"/aper_cube_stack/modules/beam2source.py -c "+CUBE+" -f {input} -p "+CBEAMS+" -d "+DATA+"; "
+        "touch {output}"
+
 rule generate_full_spec_smooth:
     input:
         DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image.fits",
@@ -115,7 +133,7 @@ rule generate_full_spec_smooth:
     output:
         DATA+"/mos_"+FIELD+"/final_sm_specfull_cube"+CUBE+".txt"
     shell:
-        "rm -rf DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_figures/; "
+        "rm -rf "+DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_figures/; "
         "python3 "+SOFTWARE+"/aper_sf2/src/get_specfull.py -t "+FIELD+" -c "+CUBE+" -p sm; "
         "touch {output}"
 
