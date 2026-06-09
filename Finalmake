@@ -7,6 +7,9 @@ FIELD = config['FIELD']
 CUBE = str(config['CUBE'])
 DATA = str(config['PATH_TO_DATA'])
 SOFTWARE = str(config['PATH_TO_SOFTWARE'])
+CBEAMS = str(config['PATH_TO_CBEAMS'])
+
+beams, = glob_wildcards(DATA+"/"+FIELD+"/HI_B0{xx}_cube"+CUBE+"_image.fits")
 
 wildcard_constraints:
     beams="\d+"
@@ -25,7 +28,7 @@ rule make_bin_mask_fullres:
     output:
         DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin.fits"
     shell:
-        "python3 "+SOFTWARE+"/aper_sf2/src/binary_mask.py -t "+FIELD+" -c "+CUBE+" -j 10"
+        "python3 "+SOFTWARE+"/aper_sf2/src/binary_mask.py -t "+FIELD+" -c "+CUBE+" -j "+str(workflow.cores)
 
 rule dilate_mask_fullres:
     input:
@@ -33,7 +36,7 @@ rule dilate_mask_fullres:
     output:
         DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin_dil.fits"
     shell:
-        "python3 "+SOFTWARE+"/aper_sf2/src/dilate_binmask.py -t "+FIELD+" -c "+CUBE+" -j 10"
+        "python3 "+SOFTWARE+"/aper_sf2/src/dilate_binmask.py -t "+FIELD+" -c "+CUBE+" -j "+str(workflow.cores)
 
 rule sofia_final_fullres:
     input:
@@ -103,7 +106,7 @@ rule dilate_mask_smooth:
     output:
         DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin_dil_sm.fits"
     shell:
-        "python3 "+SOFTWARE+"/aper_sf2/src/dilate_binmask.py -t "+FIELD+" -c "+CUBE+" -f {input[1]} -s sm"
+        "python3 "+SOFTWARE+"/aper_sf2/src/dilate_binmask.py -t "+FIELD+" -c "+CUBE+" -f {input[1]} -s sm -j "+str(workflow.cores)
 
 rule sofia_final_smooth:
     input:
