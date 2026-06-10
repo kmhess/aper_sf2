@@ -41,9 +41,11 @@ for b in range(40):
     print('\t',filename)
     if os.path.isfile(filename):
         file = fits.open(filename)
-        if mosaic_hdu['BEAM{}'.format(beam_name)]:
-            pass
-        else:
+        try:
+            if mosaic_hdu['BEAM{}'.format(beam_name)]:
+                print("[BEAMS2MOSAIC] BEAM"+str(b).zfill(2)+" extension table already exists.")
+                pass
+        except KeyError:
             print("[BEAMS2MOSAIC] Adding channel clean beam properties to BEAM"+str(b).zfill(2)+" extension table.")
             col1 = fits.Column(name='BMAJ', format='1E', unit='deg', array=file[1].data['BMAJ'])
             col2 = fits.Column(name='BMIN', format='1E', unit='deg', array=file[1].data['BMIN'])
@@ -54,6 +56,8 @@ for b in range(40):
             beam_hdu.header.comments['NAXIS2'] = 'number of channels'
             mosaic_hdu.append(beam_hdu)
         file.close()
+    else:
+        print("[BEAMS2MOSAIC] Beam"+str(b).zfill(2)+" image does not exist.")
 
 mosaic_hdu.flush()
 mosaic_hdu.close()
