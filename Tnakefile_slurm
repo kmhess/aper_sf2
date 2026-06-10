@@ -16,8 +16,10 @@ wildcard_constraints:
 rule all:
     input:
         DATA+"/mos_"+FIELD+"/rename_cube"+CUBE+".txt",
+        DATA+"/mos_"+FIELD+"/beams2mosaic_cube"+CUBE+".txt",
         DATA+"/mos_"+FIELD+"/"+FIELD+"_beams_cube"+CUBE+".png",
         DATA+"/mos_"+FIELD+"/sm_rename_cube"+CUBE+".txt",
+        DATA+"/mos_"+FIELD+"/sm_beams2mosaic_cube"+CUBE+".txt",
         DATA+"/mos_"+FIELD+"/"+FIELD+"_beams_cube"+CUBE+"_smooth.png"
 
 rule make_bin_mask:
@@ -116,6 +118,15 @@ rule make_mosaic_clean:
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*imageR*')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*pbR*')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*image_fields*')
+
+rule add_beams2mosaic:
+    input:
+        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image.fits"
+    output:
+        DATA+"/mos_"+FIELD+"/beams2mosaic_cube"+CUBE+".txt"
+    shell:
+        "python3 "
+        "touch {output}"
 
 rule run_sofia_clean:
     input:
@@ -259,6 +270,15 @@ rule run_sofia_smooth:
         10  # Same as what's coded into the template file.  No advantage of going higher because only applying existing mask.
     shell:
         "sofia "+SOFTWARE+"/aper_sf2/sofia_final_template.par input.data={input[0]} input.mask={input[1]}"
+
+rule add_beams2mosaic_smooth:
+    input:
+        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image.fits"
+    output:
+        DATA+"/mos_"+FIELD+"/sm_beams2mosaic_cube"+CUBE+".txt"
+    shell:
+        "python3 "+SOFTWARE+"/aper_sf2/src/beams2mosaic.py -f {input} -c"+CUBE+" -d "+DATA+"; "
+        "touch {output}"
 
 rule generate_full_spec_smooth:
     input:
