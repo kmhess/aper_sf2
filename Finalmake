@@ -64,6 +64,7 @@ rule generate_specfull_fullres:
         DATA+"/mos_"+FIELD+"/final_specfull_cube"+CUBE+".txt"
     shell:
         "rm -rf "+DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_figures/; "
+        "rm -rf "+DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image*_sip.log; "
         "python3 "+SOFTWARE+"/aper_sf2/src/get_specfull.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+"; "
         "touch {output}"
 
@@ -134,6 +135,7 @@ rule generate_full_spec_smooth:
         DATA+"/mos_"+FIELD+"/final_sm_specfull_cube"+CUBE+".txt"
     shell:
         "rm -rf "+DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_figures/; "
+        "rm -rf "+DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image*_sip.log; "
         "python3 "+SOFTWARE+"/aper_sf2/src/get_specfull.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+" -p sm; "
         "touch {output}"
 
