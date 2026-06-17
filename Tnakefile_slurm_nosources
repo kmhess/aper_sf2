@@ -15,44 +15,19 @@ wildcard_constraints:
 
 rule all:
     input:
-        DATA+"/mos_"+FIELD+"/rename_cube"+CUBE+".txt",
         DATA+"/mos_"+FIELD+"/beams2mosaic_cube"+CUBE+".txt",
         DATA+"/mos_"+FIELD+"/"+FIELD+"_beams_cube"+CUBE+".png",
-        DATA+"/mos_"+FIELD+"/sm_rename_cube"+CUBE+".txt",
         DATA+"/mos_"+FIELD+"/sm_beams2mosaic_cube"+CUBE+".txt",
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_beams_cube"+CUBE+"_smooth.png"
-
-rule make_bin_mask:
-    input:
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_cat_edit.txt",
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask.fits"
-    output:
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin.fits"
-    shell:
-        "python3 "+SOFTWARE+"/aper_sf2/src/binary_mask.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+" -j "+str(workflow.cores)
-
-rule dilate_mask:
-    input:
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin.fits"
-    output:
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin_dil.fits"
-    shell:
-        "python3 "+SOFTWARE+"/aper_sf2/src/dilate_binmask.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+" -j "+str(workflow.cores)
+        DATA+"/mos_"+FIELD+"/"+FIELD+"_beams_cube"+CUBE+"_smooth.png",
+        DATA+"/mos_"+FIELD+"/cleanup_cube"+CUBE+".txt"
 
 rule regrid_masks:
     input:
-        DATA+"/"+FIELD+"/HI_B0{bm}_cube"+CUBE+"_image.fits",
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin_dil.fits"
+        DATA+"/"+FIELD+"/HI_B0{bm}_cube"+CUBE+"_image.fits"
     output:
         DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin_dil{bm}_regrid.fits"
-    threads:
-        7
-#        #5  # Normal
-#        3  # MDS fields (should really be doing this with memory allocation not threads)
-    resources:
-        mem_mb = 55000
     shell:
-        "python3 "+SOFTWARE+"/aper_sf2/src/regridmask.py {input[0]} {input[1]}"
+        "python3 "+SOFTWARE+"/aper_sf2/src/fake_regridmask.py {input[0]}"
 
 rule generate_new_pb:
     input:
@@ -128,65 +103,6 @@ rule add_beams2mosaic:
         "python3 "+SOFTWARE+"/aper_sf2/src/beams2mosaic.py -f {input} -c"+CUBE+" -d "+DATA+"; "
         "touch {output}"
 
-rule run_sofia_clean:
-    input:
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image.fits",
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin_dil.fits"
-    output:
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_cat.txt",
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_cat.xml",
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_mask-2d.fits"
-    threads:
-        10  # Same as what's coded into the template file.  No advantage of going higher because only applying existing mask.
-    shell:
-        "sofia "+SOFTWARE+"/aper_sf2/sofia_final_template.par input.data={input[0]} input.mask={input[1]}"
-
-rule generate_full_spec:
-    input:
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image.fits",
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_cat.xml"
-    output:
-        DATA+"/mos_"+FIELD+"/specfull_cube"+CUBE+".txt"
-    threads:
-        1
-    shell:
-        "python3 "+SOFTWARE+"/aper_sf2/src/get_specfull.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+"; "
-        "touch {output}"
-
-rule run_sip:
-    input:
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image_cat.xml",
-        DATA+"/mos_"+FIELD+"/specfull_cube"+CUBE+".txt"
-    output:
-        DATA+"/mos_"+FIELD+"/sip_cube"+CUBE+".txt"
-    threads:
-        1
-    shell:
-        "sofia_image_pipeline -c {input[0]} -s panstarrs -i 5 -o "+DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image.fits -m;"
-        "touch {output}"
-
-rule edit_sip_figs:
-    input:
-        DATA+"/mos_"+FIELD+"/sip_cube"+CUBE+".txt"
-    output:
-        DATA+"/mos_"+FIELD+"/sip_cube"+CUBE+"_edit.txt"
-    threads:
-        1
-    shell:
-        "python3 "+SOFTWARE+"/aper_sf2/src/edit_sip_images.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+"; "
-        "touch {output}"
-
-rule rename_pngs:
-    input:
-        DATA+"/mos_"+ FIELD+"/sip_cube"+CUBE+"_edit.txt"
-    output:
-        DATA+"/mos_"+ FIELD+"/rename_cube"+CUBE+".txt"
-    threads:
-        1
-    shell:
-        "python3 "+SOFTWARE+"/aper_sf2/src/rename_combo.py -d "+DATA+" -t " + FIELD + " -c "+CUBE+"; "
-        "touch {output}"
-
 rule generate_psf_stats:
     input:
         DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image.fits"
@@ -246,31 +162,6 @@ checkpoint make_mosaic_smooth:
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*regrid*')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*hdr')
 
-rule dilmask_smooth:
-    input:
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image.fits",
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin_dil.fits"
-    output:
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin_dil_sm.fits"
-    threads:
-        workflow.cores
-    shell:
-        "python "+SOFTWARE+"/aper_sf2/src/dilate_binmask.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+" -f {input[1]} -s sm"
-
-rule run_sofia_smooth:
-    input:
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image.fits",
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_image_sofiaFS_mask_bin_dil_sm.fits"
-    output:
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_cat.txt",
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_cat.xml",
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_mask-2d.fits",
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_mask.fits"
-    threads:
-        10  # Same as what's coded into the template file.  No advantage of going higher because only applying existing mask.
-    shell:
-        "sofia "+SOFTWARE+"/aper_sf2/sofia_final_template.par input.data={input[0]} input.mask={input[1]}"
-
 rule add_beams2mosaic_smooth:
     input:
         DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image.fits"
@@ -278,50 +169,6 @@ rule add_beams2mosaic_smooth:
         DATA+"/mos_"+FIELD+"/sm_beams2mosaic_cube"+CUBE+".txt"
     shell:
         "python3 "+SOFTWARE+"/aper_sf2/src/beams2mosaic.py -f {input} -c"+CUBE+" -d "+DATA+"; "
-        "touch {output}"
-
-rule generate_full_spec_smooth:
-    input:
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image.fits",
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_cat.xml"
-    output:
-        DATA+"/mos_"+FIELD+"/sm_specfull_cube"+CUBE+".txt"
-    threads:
-        1
-    shell:
-        "python3 "+SOFTWARE+"/aper_sf2/src/get_specfull.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+" -p sm; "
-        "touch {output}"
-
-rule run_sip_smooth:
-    input:
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image_cat.xml",
-        DATA+"/mos_"+FIELD+"/sm_specfull_cube"+CUBE+".txt"
-    output:
-        DATA+"/mos_"+FIELD+"/sm_sip_cube"+CUBE+".txt"
-    threads:
-        1
-    shell:
-        "sofia_image_pipeline -c {input[0]} -s panstarrs -i 5 -o "+DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image.fits -m;"
-        "touch {output}"
-
-rule edit_sip_figs_smooth:
-    input:
-        DATA+"/mos_"+FIELD+"/sm_sip_cube"+CUBE+".txt"
-    output:
-        DATA+"/mos_"+FIELD+"/sm_sip_cube"+CUBE+"_edit.txt"
-    threads:
-        1
-    shell:
-        "python3 "+SOFTWARE+"/aper_sf2/src/edit_sip_images.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+" -w; "
-        "touch {output}"
-
-rule rename_pngs_smooth:
-    input:
-        DATA+"/mos_"+FIELD+"/sm_sip_cube"+CUBE+"_edit.txt"
-    output:
-        DATA+"/mos_"+FIELD+"/sm_rename_cube"+CUBE+".txt"
-    shell:
-        "python3 "+SOFTWARE+"/aper_sf2/src/rename_combo.py -d "+DATA+" -t " + FIELD + " -c "+CUBE+" -p sm -w; "
         "touch {output}"
 
 rule generate_psf_stats_smooth:
@@ -336,3 +183,12 @@ rule generate_psf_stats_smooth:
         shell("python3 "+SOFTWARE+"/aper_sf2/src/record_beams.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+" -w; ")
         shell("python3 "+SOFTWARE+"/aper_sf2/src/plot_beams.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+" -w; ")
         shell("rm -rf "+DATA+"/mos_"+FIELD+"/*bin*")
+
+rule clean_up:
+    input:
+        DATA+"/mos_"+FIELD+"/"+FIELD+"_beams_cube"+CUBE+"_smooth.png"
+    output:
+        DATA+"/mos_"+FIELD+"/cleanup_cube"+CUBE+".txt"
+    shell:
+        "python3 "+SOFTWARE+"/aper_sf2/src/compress_cleanup.py "+DATA+" "+FIELD+" "+CUBE+"; "
+        "touch {output}"
