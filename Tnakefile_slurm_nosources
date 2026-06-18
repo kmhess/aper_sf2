@@ -94,15 +94,6 @@ rule make_mosaic_clean:
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*pbR*')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*image_fields*')
 
-rule add_beams2mosaic:
-    input:
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image.fits"
-    output:
-        DATA+"/mos_"+FIELD+"/beams2mosaic_cube"+CUBE+".txt"
-    shell:
-        "python3 "+SOFTWARE+"/aper_sf2/src/beams2mosaic.py -f {input} -c"+CUBE+" -d "+DATA+"; "
-        "touch {output}"
-
 rule generate_psf_stats:
     input:
         DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image.fits"
@@ -114,6 +105,15 @@ rule generate_psf_stats:
     shell:
         "python3 "+SOFTWARE+"/aper_sf2/src/record_beams.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+"; "
         "python3 "+SOFTWARE+"/aper_sf2/src/plot_beams.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+"; "
+
+rule add_beams2mosaic:
+    input:
+        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_image.fits"
+    output:
+        DATA+"/mos_"+FIELD+"/beams2mosaic_cube"+CUBE+".txt"
+    shell:
+        "python3 "+SOFTWARE+"/aper_sf2/src/beams2mosaic.py -f {input} -c"+CUBE+" -d "+DATA+"; "
+        "touch {output}"
 
 rule smooth:
     input:
@@ -162,15 +162,6 @@ checkpoint make_mosaic_smooth:
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*regrid*')
         os.system('rm -rf '+DATA+'/mos_'+FIELD+'/*hdr')
 
-rule add_beams2mosaic_smooth:
-    input:
-        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image.fits"
-    output:
-        DATA+"/mos_"+FIELD+"/sm_beams2mosaic_cube"+CUBE+".txt"
-    shell:
-        "python3 "+SOFTWARE+"/aper_sf2/src/beams2mosaic.py -f {input} -c"+CUBE+" -d "+DATA+"; "
-        "touch {output}"
-
 rule generate_psf_stats_smooth:
     input:
         DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image.fits"
@@ -183,6 +174,15 @@ rule generate_psf_stats_smooth:
         shell("python3 "+SOFTWARE+"/aper_sf2/src/record_beams.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+" -w; ")
         shell("python3 "+SOFTWARE+"/aper_sf2/src/plot_beams.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+" -w; ")
         shell("rm -rf "+DATA+"/mos_"+FIELD+"/*bin*")
+
+rule add_beams2mosaic_smooth:
+    input:
+        DATA+"/mos_"+FIELD+"/"+FIELD+"_HIcube"+CUBE+"_clean_smooth_image.fits"
+    output:
+        DATA+"/mos_"+FIELD+"/sm_beams2mosaic_cube"+CUBE+".txt"
+    shell:
+        "python3 "+SOFTWARE+"/aper_sf2/src/beams2mosaic.py -f {input} -c"+CUBE+" -d "+DATA+"; "
+        "touch {output}"
 
 rule clean_up:
     input:
