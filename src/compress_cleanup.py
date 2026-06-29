@@ -17,8 +17,9 @@ def compress_clean(DATA, FIELD, CUBE):
     field_spline_clsmpb = glob(DATA+"/"+FIELD+"/HI_B0*_cube"+CUBE+"_spline_clean_smooth_pb.fits")
     mos_filt = glob(DATA+"/mos_"+FIELD+"/*filtered.fits")
     mos_filtspline = glob(DATA+"/mos_"+FIELD+"/*filtered_spline.fits")
+    mos_bin = glob(DATA+"/mos_"+FIELD+"/*bin*")
 
-    for group in [field_pb, field_spline, field_spline_clpb, field_spline_clsmpb, mos_filt, mos_filtspline]:
+    for group in [field_pb, field_spline, field_spline_clpb,field_spline_clsmpb, mos_filt, mos_filtspline, mos_bin]:
         for a in group:
             if os.path.isfile(a):
                 os.system('rm -r {}'.format(a))

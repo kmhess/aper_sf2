@@ -41,7 +41,7 @@ for b in range(40):
         end_name = '_smooth.txt'
     filename = args.directory + '/' + field + '/HI_B0' + beam_name + '_cube' + args.cubes + end_name
     print('\t',filename)
-    if os.path.isfile(filename):
+    if os.path.isfile(filename) and os.path.getsize(filename) != 0:
         file = Table.read(filename, format='ascii')
         try:
             if mosaic_hdu['BEAM{}'.format(beam_name)]:
@@ -58,6 +58,7 @@ for b in range(40):
             beam_hdu.header.comments['NAXIS2'] = 'number of channels'
             mosaic_hdu.append(beam_hdu)
     else:
+        print('\t',filename+'is empty or does not exist, so using fits file instead.')
         end_name = 'clean_image.fits'
         if 'smooth' in mosaic:
             end_name = 'clean_smooth_image.fits'
