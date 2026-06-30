@@ -326,7 +326,6 @@ rule generate_psf_stats_smooth:
     run:
         shell("python3 "+SOFTWARE+"/aper_sf2/src/record_beams.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+" -w; ")
         shell("python3 "+SOFTWARE+"/aper_sf2/src/plot_beams.py -d "+DATA+" -t "+FIELD+" -c "+CUBE+" -w; ")
-        shell("rm -rf "+DATA+"/mos_"+FIELD+"/*bin*")
 
 rule add_beams2mosaic_smooth:
     input:
