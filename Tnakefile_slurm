@@ -50,7 +50,7 @@ rule regrid_masks:
 #        #5  # Normal
 #        3  # MDS fields (should really be doing this with memory allocation not threads)
     resources:
-        mem_mb = 54000
+        mem_mb = 54000  # 51.99 GB on Grafana
     shell:
         "python3 "+SOFTWARE+"/aper_sf2/src/regridmask.py {input[0]} {input[1]}"
 
@@ -91,7 +91,7 @@ rule clean:
     threads:
         4
     resources:
-        mem_mb = 32000
+        mem_mb = 20000  #18.69 on Grafana
     singularity:
         APERCAL+"/apercal.sif"
     shell:

@@ -66,7 +66,7 @@ rule clean:
     threads:
         4
     resources:
-        mem_mb = 32000
+        mem_mb = 20000  #18.69 on Grafana
     singularity:
         APERCAL+"/apercal.sif"
     shell:
