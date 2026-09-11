@@ -107,23 +107,27 @@ for c in cubes:
 
                 if np.nansum(result * mask2d) > 0.:
                     print("\tSpatial filtering flag for source {}".format(s))
-                    I1.text((0.051*combo_im.size[0], 0.037*combo_im.size[1]), "!",
+                    I1.text((0.045*combo_im.size[0], 0.037*combo_im.size[1]), "!",
                             font=ImageFont.truetype(font=font, size=48), fill=(255, 0, 0))
-                    I1.text((0.280*combo_im.size[0], 0.037*combo_im.size[1]), "!",
+                    I1.text((0.217*combo_im.size[0], 0.037*combo_im.size[1]), "!",
                             font=ImageFont.truetype(font=font, size=48), fill=(255, 0, 0))
-                    I1.text((0.539*combo_im.size[0], 0.037*combo_im.size[1]), "!",
+                    I1.text((0.422*combo_im.size[0], 0.037*combo_im.size[1]), "!",
                             font=ImageFont.truetype(font=font, size=48), fill=(255, 0, 0))
-                    I1.text((0.791*combo_im.size[0], 0.037*combo_im.size[1]), "!",
+                    I1.text((0.623*combo_im.size[0], 0.037*combo_im.size[1]), "!",
+                            font=ImageFont.truetype(font=font, size=48), fill=(255, 0, 0))
+                    I1.text((0.83*combo_im.size[0], 0.037*combo_im.size[1]), "!",
                             font=ImageFont.truetype(font=font, size=48), fill=(255, 0, 0))
                 if spec_flag:
                     print("\tSpectral flag for source {}".format(s))
-                    I1.text((0.061 * combo_im.size[0], 0.037 * combo_im.size[1]), "!",
+                    I1.text((0.055 * combo_im.size[0], 0.037 * combo_im.size[1]), "!",
                             font=ImageFont.truetype(font=font, size=48), fill=(255, 165, 0))
-                    I1.text((0.290 * combo_im.size[0], 0.037 * combo_im.size[1]), "!",
+                    I1.text((0.227 * combo_im.size[0], 0.037 * combo_im.size[1]), "!",
                             font=ImageFont.truetype(font=font, size=48), fill=(255, 165, 0))
-                    I1.text((0.549 * combo_im.size[0], 0.037 * combo_im.size[1]), "!",
+                    I1.text((0.432 * combo_im.size[0], 0.037 * combo_im.size[1]), "!",
                             font=ImageFont.truetype(font=font, size=48), fill=(255, 165, 0))
-                    I1.text((0.801 * combo_im.size[0], 0.037 * combo_im.size[1]), "!",
+                    I1.text((0.633 * combo_im.size[0], 0.037 * combo_im.size[1]), "!",
+                            font=ImageFont.truetype(font=font, size=48), fill=(255, 165, 0))
+                    I1.text((0.84 * combo_im.size[0], 0.037 * combo_im.size[1]), "!",
                             font=ImageFont.truetype(font=font, size=48), fill=(255, 165, 0))
 
                 combo_im.save(combo_im_name)
